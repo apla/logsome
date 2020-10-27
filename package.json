@@ -1,14 +1,14 @@
 {
-  "name": "app-agent",
+  "name": "logsome",
   "version": "1.0.0",
-  "description": "Make app objects consumable by loggers and reporters",
+  "description": "Prepare app objects to be consumable by loggers",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jasmine --reporter=jamocha/spec --config=test/.jasmine.json"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apla/app-agent.git"
+    "url": "git+https://github.com/apla/logsome.git"
   },
   "keywords": [
     "logger",
@@ -18,7 +18,12 @@
   "author": "Ivan Baktsheev <dot.and.thing@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/apla/app-agent/issues"
+    "url": "https://github.com/apla/logsome/issues"
   },
-  "homepage": "https://github.com/apla/app-agent#readme"
+  "homepage": "https://github.com/apla/logsome#readme",
+  "devDependencies": {
+    "esm": "^3.2.25",
+    "jamocha": "^1.0.1",
+    "jasmine": "^3.6.2"
+  }
 }

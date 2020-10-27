@@ -1,4 +1,4 @@
-# app-agent
+# LOGSOME
 
 Make app objects consumable by loggers and reporters
 
@@ -8,24 +8,25 @@ Not yet ready.
 
 ## Why?
 
-I want to have separate routines for logging and reporting,
+I want to have separate routines for console and remote service,
 well-integrated with execution environment.
 
-Logging:
+Log to console:
 
 ```javascript
 console.log (...format`${this} just launched`);
 ```
 
-Logging and reporting:
+Log to console and remote:
 
 ```javascript
-console.log (...report`${this} just launched`);
+console.log (...send`${this} just launched`);
 ```
 
-Just reporting:
+Just remote:
+
 ```javascript
-report`${this} just launched`;
+send`${this} just launched`;
 ```
 
 Result? Browser will have proper caller and stringified message with browsable object, reporter will have human–readable and machine–readable log messages.
@@ -33,20 +34,28 @@ Result? Browser will have proper caller and stringified message with browsable o
 ## Usage
 
 ```javascript
-// use with defaults
-import {format, report} from 'app-agent';
+// log formatting
+import {format} from 'logsome';
 
-console.log (...report`${this} just launched`);
+console.log (...format`${this} just launched`);
 
-// customize
-import agent from 'app-agent';
+// mute unneeded logs in console
+import logsome from 'logsome';
 
 // verbose setting once per app, also supports env vars
-agent.mute ('Loader');
-agent.only ('Loader');
+logsome.mute ('Loader');
+logsome.only ('Loader');
 
-// 
-agent
+import logsome from 'logsome';
+
+// configure API endpoint once
+const sendR1 = logsome.initSender ('remote', 'https://site.com/api/v1/log');
+
+// use everywhere
+const send = logsome.sender ('remote');
+
+// send something
+console.log (...send`${this} just launched`);
 
 ```
 
@@ -66,4 +75,4 @@ No one can tell what should be reported. List safe fields and avoid any sensitiv
 
  * Logging object should describe it's own stringified version with `toString()` and report fields with `toJSON()`;
  * Formatting and reporting configurable per object (but please use class instances);
- * You can turn off logging per class by class name;
+ * You can turn off logging per class by class name ([WHATWG spec](https://console.spec.whatwg.org/#logger));

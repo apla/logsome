@@ -1,0 +1,10 @@
+{
+	"spec_dir": "test",
+	"helpers": [
+		"../node_modules/jamocha/helpers.js"
+	],
+	"spec_files": [
+		"*.js"
+	],
+	"random": false
+}
