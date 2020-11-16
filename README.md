@@ -49,10 +49,10 @@ logsome.only ('Loader');
 import logsome from 'logsome';
 
 // configure API endpoint once
-const sendR1 = logsome.initSender ('remote', 'https://site.com/api/v1/log');
+const sendR1 = logsome.server ('remote', 'https://site.com/api/v1/log');
 
 // use everywhere
-const send = logsome.sender ('remote');
+const send = logsome.server ('remote');
 
 // send something
 console.log (...send`${this} just launched`);

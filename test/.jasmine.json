@@ -3,6 +3,7 @@
 	"helpers": [
 		"../node_modules/jamocha/helpers.js"
 	],
+	"requires": ["esm"],
 	"spec_files": [
 		"*.js"
 	],
