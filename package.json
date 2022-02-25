@@ -2,7 +2,8 @@
   "name": "logsome",
   "version": "1.1.0",
   "description": "Prepare app objects to be consumable by loggers",
-  "main": "index.js",
+  "main": "logsome.js",
+  "type": "module",
   "scripts": {
     "test": "jasmine --reporter=jamocha/spec --config=test/.jasmine.json"
   },
@@ -24,6 +25,6 @@
   "devDependencies": {
     "esm": "^3.2.25",
     "jamocha": "^1.0.1",
-    "jasmine": "^3.6.2"
+    "jasmine": "^4.0.2"
   }
 }

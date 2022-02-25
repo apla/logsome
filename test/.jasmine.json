@@ -3,7 +3,8 @@
 	"helpers": [
 		"../node_modules/jamocha/helpers.js"
 	],
-	"requires": ["esm"],
+	"jsLoader": "import",
+	"reporter": "not works, use cli parameter node_modules/jamocha/spec.js",
 	"spec_files": [
 		"*.js"
 	],
