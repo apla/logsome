@@ -5,7 +5,8 @@
   "main": "logsome.js",
   "type": "module",
   "scripts": {
-    "test": "jasmine --reporter=jamocha/spec --config=test/.jasmine.json"
+    "prepare": "npx rollup logsome.js --file logsome.cjs --format cjs",
+    "test": "jasmine --reporter=node_modules/jamocha/spec.js --config=test/.jasmine.json"
   },
   "repository": {
     "type": "git",
