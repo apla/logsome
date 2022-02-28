@@ -1,6 +1,6 @@
 {
   "name": "logsome",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Prepare app objects to be consumable by loggers",
   "main": "logsome.js",
   "type": "module",
@@ -23,7 +23,6 @@
   },
   "homepage": "https://github.com/apla/logsome#readme",
   "devDependencies": {
-    "esm": "^3.2.25",
     "jamocha": "^1.0.1",
     "jasmine": "^4.0.2"
   }
