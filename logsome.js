@@ -124,7 +124,7 @@ function argDumper (style, str, arg, index, fills, tail) {
  * @param  {...any} args interpolations
  * @returns {Array|Object}
  */
-function formatter ({style, wantsObject}, strings, ...args) {
+export function formatter ({style, wantsObject}, strings, ...args) {
 	
 	// not a template string
 	// TODO: check/split for %o
@@ -163,11 +163,10 @@ function formatter ({style, wantsObject}, strings, ...args) {
 
 const roundedStyle = 'border-radius: 3px;';
 
-
 /**
  * @type {Object<String,FormatStyles>}
  */
-const styles = {
+export const styles = {
 	// browser environment
 	browser: {
         common: roundedStyle,
@@ -207,11 +206,11 @@ const styles = {
 	},
 };
 
-const runtime = globalThis.window ? 'browser' : 'node';
+export const runtime = globalThis.window ? 'browser' : 'node';
 
 export const format = formatter.bind (null, {style: styles[runtime]});
 
-const locators = {
+export const locators = {
 	
 	/**
 	 * Loggly url to endpoint conversion routine
@@ -238,8 +237,10 @@ const locators = {
 			url: endpointUrl,
 			data: {
 				// TODO: add IP and more meta
-				// clientHost:
-				pid: typeof process !== 'undefined' ? process.pid : undefined
+				// clientHost is automatically populated by loggly
+				// hostname: typeof process !== 'undefined' ? require('os').hostname() : undefined,
+				pid: typeof process !== 'undefined' ? process.pid : undefined,
+				
 			},
 			options: {
 				styles: 'server',
