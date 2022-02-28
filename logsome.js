@@ -92,7 +92,7 @@ function argDumper (style, str, arg, index, fills, tail) {
 
 			const formatArgs = [
 				[argStringified.style || style.object, style.common].join (''),
-				haveToString ? argStringified : argConstructorName,
+				customToString && argStringified.log ? argStringified.log : argConstructorName,
 				style.clear
 			];
 			

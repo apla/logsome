@@ -90,4 +90,55 @@ describe ("logsome", () => {
         if (debug) console.log(...args);
     });
 
+    it ("this is special", () => {
+
+        let args = [];
+
+        class Runner {
+            test () {
+                args = format`${this} test method`;
+            }
+        }
+
+        const r = new Runner();
+
+        r.test();
+
+        assert.strictEqual(args[2], r.constructor.name);
+        assert.strictEqual(Object.keys(args[4])[0], r.constructor.name + '#0');
+
+        if (debug) console.log(...args);
+    });
+
+    it ("this is special with id", () => {
+
+        let args = [];
+
+        class Runner {
+            constructor(id) {
+                this.id = id;
+            }
+            toString() {
+                // can be memoized
+                const stringified = new String(({}).toString.apply(this));
+                Object.defineProperty(stringified, 'log', {
+                    value: this.constructor.name + '@id=' + this.id, writable: false
+                });
+                return stringified;
+            }
+            test() {
+                args = format`${this} test method`;
+            }
+        }
+
+        const r = new Runner(42);
+
+        r.test();
+
+        assert.strictEqual(args[2], r.constructor.name + '@id=' + 42);
+        assert.strictEqual(Object.keys(args[4])[0], r.constructor.name + '#0');
+
+        if (debug) console.log(...args);
+    });
+
 });

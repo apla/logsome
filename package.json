@@ -1,9 +1,15 @@
 {
   "name": "logsome",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Prepare app objects to be consumable by loggers",
   "main": "logsome.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "require": "./logsome.cjs",
+      "import": "./logsome.js"
+    }
+  },
   "scripts": {
     "prepare": "npx rollup logsome.js --file logsome.cjs --format cjs",
     "test": "jasmine --reporter=node_modules/jamocha/spec.js --config=test/.jasmine.json"
