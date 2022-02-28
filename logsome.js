@@ -64,13 +64,14 @@ function argDumper (style, str, arg, index, fills, tail) {
 	} else if (arg === Object(arg)) {
 		let tailValue = (style.stringify && arg.toJSON) ? arg.toJSON() : arg;
 
-		const haveToString = arg.toString !== ({}).toString;
+		const customToString = arg.toString !== ({}).toString;
 		const argStringified = arg.toString();
 		const argConstructorName = arg.constructor.name;
+		const argKeys = Object.keys(arg);
 
 		// TODO: maybe some heuristics to avoid false positives
-		if (style.collectArgs && !haveToString && argConstructorName === 'Object' && Object.keys(arg).length === 1) {
-			const tailKey = Object.keys(arg)[0];
+		if (style.collectArgs && !customToString && argConstructorName === 'Object' && argKeys.length === 1) {
+			const tailKey = argKeys[0];
 			tailValue = arg[tailKey];
 			if (Array.isArray(tail)) {
 				tail.push(tailValue);
