@@ -24,9 +24,10 @@ describe ("logsome sender", () => {
     logglyMethod ("with loggly", async () => {
         logsome.endpoint(`loggly:${logglyToken}`, {name: 'loggly'});
         const sendr = logsome.endpoint('loggly');
-        const object = {a: 1, b: 2, c: 3};
+        const str = "123";
+        const obj = {a: 1, b: 2, c: 3};
         const array  = ['a', 'b'];
-        return await sendr`test is ${"ok"}, ${object}, ${array}`.sending;
+        return await sendr`test is ${"ok"}, ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`.sending;
 
     });
 

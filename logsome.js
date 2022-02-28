@@ -1,58 +1,92 @@
-// import http from 'http';
-// import https from 'https';
-
-
 /**
  * @typedef {Object} FormatStyles
+ * styles
  * @property {String} common common style for every type
  * @property {String} object style for objects
  * @property {String} array  style for arrays
  * @property {Number} arrayMax max array element count to inline
  * @property {String} fn     style for functions
  * @property {String} clear  style clear
+ * @property {Boolean} stringify stringify objects using toJSON method
  * @property {String} objectSeparator separator between log string and objects dump
- * @property {String} supportsPercent log environment supports percent notation
+ * @property {Boolean} supportsPercent log environment supports percent notation such as %s %o
  * @property {String} styledTemplate style template
+ * @property {Boolean} collectArgs collect args into single structure
  */
 
-function argDumper (style, arg, str, fills, values) {
-	if (arg) {
-		if (typeof arg === 'function') {
-			console.trace ("You're logging a function. Why?");
-			values.push (arg);
-			
-			const formatArgs = [
-				[style.fn, style.common].join (''),
-				(arg.name || 'anonymous'),
-				style.clear
-			];
-			if (style.supportsPercent) fills.push (...formatArgs);
+/**
+ * 
+ * @param {FormatStyles} style formatting styles
+ * @param {String} str string chunk before arg
+ * @param {*} arg template string arg
+ * @param {Number} index arg index
+ * @param {any[]} fills array of fills
+ * @param {Array|Object} tail complex objects to dump
+ * @returns 
+ */
+function argDumper (style, str, arg, index, fills, tail) {
+	if (!arg) {
+		if (style.supportsPercent) {
+			fills.push (arg);
+			return str + '%o';
+		}
+		return str + arg; // 0, false, undefined, null, NaN
+	}
 
-			return str + (style.styledTemplate || formatArgs.join(''));
-		} else if (Array.isArray(arg)) {
-			if (arg.length > style.arrayMax) {
-				values.push (arg);
+	if (typeof arg === 'function') {
+		console.trace ("You're logging a function. Why?");
+		const fnName = (arg.name || 'anonymous');
+		Array.isArray(tail) ? tail.push (arg) : tail[fnName + '#' + index] = arg;
+		
+		const formatArgs = [
+			[style.fn, style.common].join (''),
+			fnName,
+			style.clear
+		];
+		if (style.supportsPercent) fills.push (...formatArgs);
+
+		return str + (style.styledTemplate || formatArgs.join(''));
+	} else if (Array.isArray(arg)) {
+		if (arg.length > style.arrayMax) {
+			Array.isArray(tail) ? tail.push (arg) : tail['Array#' + index] = arg;
+		}
+
+		const formatArgs = [
+			[style.array, style.common].join (''),
+			// TODO: array values wrap
+			`[${arg.slice(0, style.arrayMax)}${arg.length > style.arrayMax ? ',...' : ''}]`,
+			style.clear
+		];
+		if (style.supportsPercent) fills.push (...formatArgs);
+
+		return str + (style.styledTemplate || formatArgs.join(''));
+
+	} else if (arg === Object(arg)) {
+		let tailValue = (style.stringify && arg.toJSON) ? arg.toJSON() : arg;
+
+		const haveToString = arg.toString !== ({}).toString;
+		const argStringified = arg.toString();
+		const argConstructorName = arg.constructor.name;
+
+		// TODO: maybe some heuristics to avoid false positives
+		if (style.collectArgs && !haveToString && argConstructorName === 'Object' && Object.keys(arg).length === 1) {
+			const tailKey = Object.keys(arg)[0];
+			tailValue = arg[tailKey];
+			if (Array.isArray(tail)) {
+				tail.push(tailValue);
+				// avoid recursion with collectArgs
+				return argDumper ({...style, collectArgs: false}, str, tailValue, index, fills, []);
+			} else {
+				tail[tailKey] = tailValue;
+				// avoid recursion with collectArgs
+				return argDumper ({...style, collectArgs: false}, str, tailValue, index, fills, {});
 			}
-
-			const formatArgs = [
-				[style.array, style.common].join (''),
-				`[${arg.slice(0, style.arrayMax)}${arg.length > style.arrayMax ? ',...' : ''}]`,
-				style.clear
-			];
-			if (style.supportsPercent) fills.push (...formatArgs);
-
-			return str + (style.styledTemplate || formatArgs.join(''));
-
-		} else if (arg === Object(arg)) {
-			values.push ((style.stringify && arg.toJSON) ? arg.toJSON() : arg);
-
-
-			const haveToString = arg.toString !== ({}).toString;
-			const argStringified = arg.toString();
-			const argConstructorName = arg.constructor.name;
-
-			// TODO: maybe some heuristics to avoid false positives
-			if (style.singleKey && !haveToString && argConstructorName === 'Object' && Object.keys(arg).length === 1) {
+			
+		} else {
+			if (Array.isArray(tail)) {
+				tail.push(arg);
+			} else {
+				tail[argConstructorName + '#' + index] = arg;
 			}
 
 			const formatArgs = [
@@ -62,23 +96,18 @@ function argDumper (style, arg, str, fills, values) {
 			];
 			
 			if (style.supportsPercent) fills.push (...formatArgs);
-
+	
 			return str + (style.styledTemplate || formatArgs.join(''));
-		} else if (arg.constructor instanceof String) {
-			return [str, arg, ''].join ('"'); // <string>
-		} else {
-			if (style.supportsPercent) {
-				fills.push (arg);
-				return str + '%o';
-			}
-			return str + arg; // true
 		}
+
+	} else if (arg.constructor instanceof String) {
+		return [str, arg, ''].join ('"'); // <string>
 	} else {
 		if (style.supportsPercent) {
 			fills.push (arg);
 			return str + '%o';
 		}
-		return str + arg; // 0, false, undefined, null, NaN
+		return str + arg; // true
 	}
 }
 
@@ -104,14 +133,15 @@ function formatter ({style, wantsObject}, strings, ...args) {
 
 	const logObject = {};
 	const fills  = [];
-	const values = [];
+	/** @type {Array|Object} */
+	const tail = (style.collectArgs ? {} : []);
 	const chunks = strings.map ((str, idx, arr) => {
 		if (arr.length - idx === 1)
 			return str;
 		
 		const arg = args[idx];
 		
-		return argDumper (style, arg, str, fills, values);
+		return argDumper (style, str, arg, idx, fills, tail);
 		
 	});
 
@@ -121,11 +151,13 @@ function formatter ({style, wantsObject}, strings, ...args) {
 		return {
 			template: chunks.join (''),
 			fills,
-			values,
+			tail,
 		};
 	}
 
-	return [chunks.join (''), ...fills, ...values];
+	return style.collectArgs
+		? [chunks.join (''), ...fills, tail]
+		: [chunks.join (''), ...fills, ...tail];
 }
 
 const roundedStyle = 'border-radius: 3px;';
@@ -146,6 +178,7 @@ const styles = {
 		objectSeparator: '',
 		supportsPercent: true,
 		styledTemplate: '%c %s %c', // quite ugly rounded corners
+		collectArgs: true,
 	},
 	// node logs
 	node: {
@@ -158,6 +191,7 @@ const styles = {
 		objectSeparator: ' ||| ',
 		supportsPercent: true,
 		styledTemplate: '%s%s%s',
+		collectArgs: true,
 	},
 	// formatter to send logs to server
 	server: {
@@ -168,6 +202,7 @@ const styles = {
 		clear:  '',
 		supportsPercent: false,
 		jsonify: true,
+		collectArgs: true,
 	},
 };
 
@@ -361,7 +396,7 @@ function sender (serverNameOrUrl) {
 		const serverRuntime = serverConfig.options?.styles || 'server';
 		const forLog    = formatter({style: styles[runtime], wantsObject: true}, strings, ...args);
 		const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
-		const promise   = sending(forServer.template, ...forServer.fills, ...forServer.values);
+		const promise   = sending(forServer.template, ...forServer.fills, forServer.tail);
 		Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});
 		return forLog;
 	}
