@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <script type="module">
+            // don't use skypack — it add unnecessary crap: import {format} from "https://cdn.skypack.dev/logsome@latest";
+            import {format} from "https://cdn.jsdelivr.net/npm/logsome@latest/logsome.js";
+
+            const array = [1,2,3];
+            const str   = "aaa";
+            const obj   = {a: 1, b: 2, c: 3};
+            console.log (...format`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`);
+
+            // , styles, runtime, formatter
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>

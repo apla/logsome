@@ -5,9 +5,16 @@ class Capsule {
 }
 
 const logglyToken = process.env.LOGGLY;
+// @ts-ignore
 const logglyMethod = logglyToken ? it : it.skip;
 
-describe ("logsome sender", () => {
+describe ("logsome endpoint", () => {
+    it ("void endpoint", () => {
+        const sendr = logsome.endpoint('void:');
+        sendr`${"ok"}`;
+        return true;
+    });
+    
     it.skip ("is awesome too", () => {
         const sendr = logsome.endpoint('http://localhost/api/v0/log');
         sendr`${"ok"}`;

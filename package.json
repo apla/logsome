@@ -1,6 +1,6 @@
 {
   "name": "logsome",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Prepare app objects to be consumable by loggers",
   "main": "logsome.js",
   "type": "module",

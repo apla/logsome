@@ -385,6 +385,11 @@ const servers = {};
  */
 function sender (serverNameOrUrl) {
 
+	const serverConfig = servers[serverNameOrUrl];
+
+	const url = serverConfig.url;
+	const urlObject = new URL (url);
+
 	let sending;
 	if (runtime === 'browser') {
 		sending = sendingFromBrowser.bind (null, serverNameOrUrl);
@@ -392,14 +397,17 @@ function sender (serverNameOrUrl) {
 		sending = sendingFromNode.bind (null, serverNameOrUrl);
 	}
 
-	const serverConfig = servers[serverNameOrUrl];
-
 	return function (strings, ...args) {
-		const serverRuntime = serverConfig.options?.styles || 'server';
-		const forLog    = formatter({style: styles[runtime], wantsObject: true}, strings, ...args);
-		const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
-		const promise   = sending(forServer.template, ...forServer.fills, forServer.tail);
-		Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});
+		const forLog = formatter({style: styles[runtime], wantsObject: true}, strings, ...args);
+		if (urlObject.protocol !== 'void:') {
+			const serverRuntime = serverConfig.options?.styles || 'server';
+			const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
+			const promise   = sending(forServer.template, ...forServer.fills, forServer.tail);
+			Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});	
+		} else {
+			Object.defineProperty(forLog, 'sending', {value: Promise.resolve(), enumerable: false, writable: false});	
+		}
+	
 		return forLog;
 	}
 }

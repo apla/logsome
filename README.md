@@ -27,16 +27,22 @@ import for browser:
 import {format,  endpoint} from "https://cdn.jsdelivr.net/npm/logsome@latest/logsome.js";
 ```
 
-install es module for node (commonjs require will come soon):
+install for node:
 
 ```sh
 npm i -D logsome
 ```
 
-then use
+then use esm
 
 ```javascript
 import {format, endpoint} from 'logsome';
+```
+
+or cjs
+
+```javascript
+const {format, endpoint} = require('logsome');
 ```
 
 ## Why?
@@ -73,9 +79,13 @@ const sendR1 = endpoint('remote');
 // send something
 console.log(...sendR1`${this} just launched`);
 
+// void endpoint to temporarily disable remote endpoint
+endpoint(`void:`, {name: 'base'});
+const sendR2 = endpoint('base');
+
 // loggly endpoint for demonstation purposes
 endpoint(`loggly:${logglyToken}`, {name: 'loggly'});
-const sendR2 = endpoint('loggly');
+const sendR3 = endpoint('loggly');
 
 
 ```
