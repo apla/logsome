@@ -58,7 +58,7 @@ describe ("logsome", () => {
 
         assert.strictEqual(args[2], c.constructor.name);
         assert.strictEqual(args[5], `[${array.toString()}]`);
-        assert.strictEqual(args[8], `[${[...array2.slice(0, styles.node.arrayMax), '...']}]`);
+        assert.strictEqual(args[8], `[${[...array2.slice(0, styles.node.maxArrayLength), '...']}]`);
         assert.strictEqual(args[10], str);
         assert.strictEqual(args[11], 42);
         assert.strictEqual(args[13], obj.constructor.name);

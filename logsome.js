@@ -4,9 +4,10 @@
  * @property {String} common common style for every type
  * @property {String} object style for objects
  * @property {String} array  style for arrays
- * @property {Number} arrayMax max array element count to inline
  * @property {String} fn     style for functions
  * @property {String} clear  style clear
+ * @property {Number} maxArrayLength max array element count to inline
+ * @property {Number} maxStringLength max string length to inline
  * @property {Boolean} stringify stringify objects using toJSON method
  * @property {String} objectSeparator separator between log string and objects dump
  * @property {Boolean} supportsPercent log environment supports percent notation such as %s %o
@@ -47,14 +48,14 @@ function argDumper (style, str, arg, index, fills, tail) {
 
 		return str + (style.styledTemplate || formatArgs.join(''));
 	} else if (Array.isArray(arg)) {
-		if (arg.length > style.arrayMax) {
+		if (arg.length > style.maxArrayLength) {
 			Array.isArray(tail) ? tail.push (arg) : tail['Array#' + index] = arg;
 		}
 
 		const formatArgs = [
 			[style.array, style.common].join (''),
 			// TODO: array values wrap
-			`[${arg.slice(0, style.arrayMax)}${arg.length > style.arrayMax ? ',...' : ''}]`,
+			`[${arg.slice(0, style.maxArrayLength)}${arg.length > style.maxArrayLength ? ',...' : ''}]`,
 			style.clear
 		];
 		if (style.supportsPercent) fills.push (...formatArgs);
@@ -102,6 +103,10 @@ function argDumper (style, str, arg, index, fills, tail) {
 		}
 
 	} else if (arg.constructor instanceof String) {
+		if (style.maxStringLength && arg.length > style.maxStringLength) {
+			Array.isArray(tail) ? tail.push (arg) : tail[String + '#' + index] = arg;
+			return [str, arg.slice(0, style.maxStringLength), '...'].join ('"');
+		}
 		return [str, arg, ''].join ('"'); // <string>
 	} else {
 		if (style.supportsPercent) {
@@ -172,9 +177,10 @@ export const styles = {
         common: roundedStyle,
         object: 'background-color: #fe9; color: #333; ',
 	    array:  'background-color: #fc9; color: #333; ',
-		arrayMax: 5,
 		fn:     'background-color: #3f9; color: #333; ',
 		clear:  '',
+		maxArrayLength: 5,
+		maxStringLength: 50,
 		objectSeparator: '',
 		supportsPercent: true,
 		styledTemplate: '%c %s %c', // quite ugly rounded corners
@@ -185,9 +191,10 @@ export const styles = {
         common: '',
         object: '\x1b[35m',
 	    array:  '\x1b[36m',
-		arrayMax: 5,
 		fn:     '\x1b[33m',
 		clear:  '\x1b[0m',
+		maxArrayLength: 5,
+		maxStringLength: 50,
 		objectSeparator: ' ||| ',
 		supportsPercent: true,
 		styledTemplate: '%s%s%s',
