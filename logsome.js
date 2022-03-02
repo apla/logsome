@@ -165,7 +165,7 @@ export function formatter ({style, wantsObject}, strings, ...args) {
 		: [chunks.join (''), ...fills, ...tail];
 }
 
-const roundedStyle = 'border-radius: 3px;';
+const roundedStyle = 'border-radius: 2px;';
 
 /**
  * @type {Object<String,FormatStyles>}
@@ -182,7 +182,7 @@ export const styles = {
 		maxStringLength: 50,
 		objectSeparator: '',
 		supportsPercent: true,
-		styledTemplate: '%c %s %c', // quite ugly rounded corners
+		styledTemplate: '%c%s%c', // quite ugly rounded corners
 		collectArgs: false,
 	},
 	// node logs
@@ -277,7 +277,7 @@ function sendingFromBrowser (serverName, message, fills, values) {
 	const dataSerialized = JSON.stringify ({values, message});
 	let dataToSend = dataSerialized;
 
-	const contentType = serverOptions.headers?.contentType || 'text/plain'; // 'multipart/mixed';  // 'application/x-www-form-urlencoded'; // 'application/json';
+	const contentType = (serverOptions.headers || {}).contentType || 'text/plain'; // 'multipart/mixed';  // 'application/x-www-form-urlencoded'; // 'application/json';
 	if (
 		window && window.Blob && window.navigator.sendBeacon
 		&& useBeacon
@@ -310,9 +310,9 @@ function sendingFromNode (serverName, message, fills, values) {
 	const url = serverConfig.url;
 	const urlObject = new URL (url);
 
-	const serverOptions = serverConfig.options;
+	const serverOptions = serverConfig.options || {};
 
-	const contentType = serverConfig.options?.headers?.contentType || 'text/plain'; // 'multipart/mixed';  // 'application/x-www-form-urlencoded'; // 'application/json';
+	const contentType = (serverOptions.headers || {}).contentType || 'text/plain'; // 'multipart/mixed';  // 'application/x-www-form-urlencoded'; // 'application/json';
 
 	// TODO: serialize using formatter
 	const dataToSend = JSON.stringify({values, message});
@@ -320,7 +320,7 @@ function sendingFromNode (serverName, message, fills, values) {
 	/** @type {import ('https').RequestOptions} */
 	// const requestOptions = {};
 	const requestOptions = {
-		method:  serverConfig.options?.method || 'POST',
+		method:  serverOptions.method || 'POST',
 		headers: {'Content-Type': contentType},
 	};
 
@@ -406,7 +406,7 @@ function sender (serverNameOrUrl) {
 	return function (strings, ...args) {
 		const forLog = formatter({style: styles[runtime]}, strings, ...args);
 		if (urlObject.protocol !== 'void:') {
-			const serverRuntime = serverConfig.options?.styles || 'server';
+			const serverRuntime = (serverConfig.options || {}).styles || 'server';
 			const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
 			const promise   = sending(forServer.template, ...forServer.fills, forServer.tail);
 			Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});	

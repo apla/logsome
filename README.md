@@ -94,9 +94,25 @@ const sendR3 = endpoint('loggly');
 
 No one can tell what should be reported. List safe fields and avoid any sensitive data leak. Skip extra fields to reduce bandwith.
 
- * Logging object can describe it's own stringified version with `toString()` and report fields with `toJSON()`;
+ * Logging object can describe it's own stringified version with `toString()` and report fields with `toJSON()` (node have [`util.inspect.custom`](https://nodejs.org/api/util.html#utilinspectobject-showhidden-depth-colors));
  * Formatting and reporting configurable per object (but please use class instances);
  * TODO: You can turn off logging per class by class name ([WHATWG spec](https://console.spec.whatwg.org/#logger));
+
+### Rollup & Buble integration
+
+Seems like `buble` and `@rollup/plugin-buble` cannot parse string like `return import(…`.
+
+Requires adding replacement plugin with configuration like this:
+
+```javascript
+replace({
+    preventAssignment: true,
+    delimiters: ['\\b', '\\b(?=\\s*\\()'],
+    values: {
+        import: '_import'
+    }
+}),
+```
 
 ### TODO: Comparison
 
