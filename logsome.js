@@ -183,7 +183,7 @@ export const styles = {
 		objectSeparator: '',
 		supportsPercent: true,
 		styledTemplate: '%c %s %c', // quite ugly rounded corners
-		collectArgs: true,
+		collectArgs: false,
 	},
 	// node logs
 	node: {
@@ -197,7 +197,7 @@ export const styles = {
 		objectSeparator: ' ||| ',
 		supportsPercent: true,
 		styledTemplate: '%s%s%s',
-		collectArgs: true,
+		collectArgs: false,
 	},
 	// formatter to send logs to server
 	server: {

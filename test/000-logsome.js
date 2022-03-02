@@ -1,4 +1,9 @@
-import {format, styles, formatter} from '../logsome.js';
+import {format, styles, formatter, runtime} from '../logsome.js';
+
+const formatToObject = formatter.bind (null, {style: {
+    ...styles[runtime],
+    collectArgs: true
+}});
 
 import assert from 'assert';
 
@@ -12,10 +17,12 @@ describe ("logsome", () => {
     it ("is awesome", () => {
         return true;
     });
-    it ("supports direct call", () => {
+    it ("supports direct call => array", () => {
         const c = new Capsule;
 
         const args = format(c);
+
+        assert.strictEqual(args.length, 5);
 
         // template string
         assert.strictEqual (args[0], styles.node.styledTemplate + styles.node.objectSeparator);
@@ -24,16 +31,38 @@ describe ("logsome", () => {
         assert.strictEqual (args[2], c.constructor.name);
         // ascii colors clear, skipped
         // class name + arg number
-        assert.strictEqual (Object.keys(args[4])[0], c.constructor.name + '#0');
+        assert.strictEqual(args[4], c);
 
         if (debug) console.log (...format(c));
     });
 
-    it ("but it's better to have tagged template string", () => {
+    it ("but it's better to have tagged template string => array", () => {
         const c = new Capsule;
         // console.log (...format`${c}`);
 
         const args = format`${c}`;
+
+        assert.strictEqual(args.length, 5);
+
+        // template string
+        assert.strictEqual(args[0], styles.node.styledTemplate + styles.node.objectSeparator);
+        // ascii colors, skipped
+        // class name
+        assert.strictEqual(args[2], c.constructor.name);
+        // ascii colors clear, skipped
+        // class name + arg number
+        assert.strictEqual(args[4], c);
+
+        if (debug) console.log (...format`${c}`);
+    });
+
+    it ("but it's better to have tagged template string => object", () => {
+        const c = new Capsule;
+        // console.log (...format`${c}`);
+
+        const args = formatToObject`${c}`;
+
+        assert.strictEqual(args.length, 5);
 
         // template string
         assert.strictEqual(args[0], styles.node.styledTemplate + styles.node.objectSeparator);
@@ -43,18 +72,20 @@ describe ("logsome", () => {
         // ascii colors clear, skipped
         // class name + arg number
         assert.strictEqual(Object.keys(args[4])[0], c.constructor.name + '#0');
+        assert.strictEqual(args[4][Object.keys(args[4])[0]], c);
 
-        if (debug) console.log (...format`${c}`);
+        if (debug) console.log (...formatToObject`${c}`);
     });
+
 
     it ("more data to log", () => {
         const c = new Capsule;
-        const array = [1,2,3];
-        const array2 = [1,2,3,4,5,6];
+        const array = [1, 2, 3];
+        const array2 = [1, 2, 3, 4, 5, 6, 7];
         const str   = "aaa";
         const obj   = {a: 1, b: 2, c: 3};
 
-        const args = format`${c} class instance, array ${array}, other array ${array2} string ${str}, number ${42}, object ${obj}`;
+        const args = formatToObject`${c} class instance, array ${array}, other array ${array2} string ${str}, number ${42}, object ${obj}`;
 
         assert.strictEqual(args[2], c.constructor.name);
         assert.strictEqual(args[5], `[${array.toString()}]`);
@@ -70,12 +101,14 @@ describe ("logsome", () => {
         if (debug) console.log (...args);
     });
 
-    it ("log keys", () => {
+    it ("log keys => object", () => {
         const array = [1,2,3];
         const str   = "aaa";
         const obj   = {a: 1, b: 2, c: 3};
 
-        const args = format`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`;
+        const args = formatToObject`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`;
+
+        console.log(args);
 
         assert.strictEqual(args[2], `[${array.toString()}]`);
         assert.strictEqual(args[4], str);
@@ -90,13 +123,14 @@ describe ("logsome", () => {
         if (debug) console.log(...args);
     });
 
+
     it ("this is special", () => {
 
         let args = [];
 
         class Runner {
             test () {
-                args = format`${this} test method`;
+                args = formatToObject`${this} test method`;
             }
         }
 
@@ -125,7 +159,7 @@ describe ("logsome", () => {
                 }
             }
             test() {
-                args = format`${this} test method`;
+                args = formatToObject`${this} test method`;
             }
         }
 
