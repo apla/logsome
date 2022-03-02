@@ -38,8 +38,6 @@ describe ("logsome", () => {
 
     it ("but it's better to have tagged template string => array", () => {
         const c = new Capsule;
-        // console.log (...format`${c}`);
-
         const args = format`${c}`;
 
         assert.strictEqual(args.length, 5);
@@ -58,8 +56,6 @@ describe ("logsome", () => {
 
     it ("but it's better to have tagged template string => object", () => {
         const c = new Capsule;
-        // console.log (...format`${c}`);
-
         const args = formatToObject`${c}`;
 
         assert.strictEqual(args.length, 5);
@@ -107,8 +103,6 @@ describe ("logsome", () => {
         const obj   = {a: 1, b: 2, c: 3};
 
         const args = formatToObject`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`;
-
-        console.log(args);
 
         assert.strictEqual(args[2], `[${array.toString()}]`);
         assert.strictEqual(args[4], str);

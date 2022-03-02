@@ -29,8 +29,6 @@ describe ("logsome endpoint", () => {
         assert.strictEqual(senderArgs.length, formatArgs.length);
         assert.strictEqual(senderArgs[0], formatArgs[0]);
 
-        console.log(senderArgs, formatArgs);
-
         return true;
     });
     
