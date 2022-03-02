@@ -1,4 +1,6 @@
-import logsome from '../logsome.js';
+import logsome, {endpoint, format} from '../logsome.js';
+
+import assert from 'assert';
 
 class Capsule {
 
@@ -10,8 +12,25 @@ const logglyMethod = logglyToken ? it : it.skip;
 
 describe ("logsome endpoint", () => {
     it ("void endpoint", () => {
-        const sendr = logsome.endpoint('void:');
-        sendr`${"ok"}`;
+
+        const array = [1,2,3];
+        const str   = "aaa";
+        const obj   = {a: 1, b: 2, c: 3};
+
+        const sender = endpoint('void:');
+        const senderArgs = sender`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`;
+
+        const formatArgs = format`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`;
+
+        assert(Array.isArray(senderArgs));
+
+        assert(senderArgs.sending);
+
+        assert.strictEqual(senderArgs.length, formatArgs.length);
+        assert.strictEqual(senderArgs[0], formatArgs[0]);
+
+        console.log(senderArgs, formatArgs);
+
         return true;
     });
     

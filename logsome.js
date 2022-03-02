@@ -404,7 +404,7 @@ function sender (serverNameOrUrl) {
 	}
 
 	return function (strings, ...args) {
-		const forLog = formatter({style: styles[runtime], wantsObject: true}, strings, ...args);
+		const forLog = formatter({style: styles[runtime]}, strings, ...args);
 		if (urlObject.protocol !== 'void:') {
 			const serverRuntime = serverConfig.options?.styles || 'server';
 			const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
