@@ -118,13 +118,11 @@ describe ("logsome", () => {
             constructor(id) {
                 this.id = id;
             }
-            toString() {
-                // can be memoized
-                const stringified = new String(({}).toString.apply(this));
-                Object.defineProperty(stringified, 'log', {
-                    value: this.constructor.name + '@id=' + this.id, writable: false
-                });
-                return stringified;
+            [Symbol.for('logsome')]() {
+                return {
+                    title: this.constructor.name + '@id=' + this.id, writable: false,
+                    // style: {node: '', browser: ''}
+                }
             }
             test() {
                 args = format`${this} test method`;

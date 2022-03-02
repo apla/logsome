@@ -65,13 +65,12 @@ function argDumper (style, str, arg, index, fills, tail) {
 	} else if (arg === Object(arg)) {
 		let tailValue = (style.stringify && arg.toJSON) ? arg.toJSON() : arg;
 
-		const customToString = arg.toString !== ({}).toString;
-		const argStringified = arg.toString();
+		const customFormat = arg[Symbol.for('logsome')] && arg[Symbol.for('logsome')]();
 		const argConstructorName = arg.constructor.name;
 		const argKeys = Object.keys(arg);
 
 		// TODO: maybe some heuristics to avoid false positives
-		if (style.collectArgs && !customToString && argConstructorName === 'Object' && argKeys.length === 1) {
+		if (style.collectArgs && !customFormat && argConstructorName === 'Object' && argKeys.length === 1) {
 			const tailKey = argKeys[0];
 			tailValue = arg[tailKey];
 			if (Array.isArray(tail)) {
@@ -92,8 +91,8 @@ function argDumper (style, str, arg, index, fills, tail) {
 			}
 
 			const formatArgs = [
-				[argStringified.style || style.object, style.common].join (''),
-				customToString && argStringified.log ? argStringified.log : argConstructorName,
+				[(customFormat && customFormat.style || {})[runtime] || style.object, style.common].join (''),
+				customFormat && customFormat.title ? customFormat.title : argConstructorName,
 				style.clear
 			];
 			
