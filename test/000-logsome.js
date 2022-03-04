@@ -77,22 +77,23 @@ describe ("logsome", () => {
     it ("more data to log", () => {
         const c = new Capsule;
         const array = [1, 2, 3];
-        const array2 = [1, 2, 3, 4, 5, 6, 7];
+        const arrayOverMax = [1, 2, 3, 4, 5, 6, 7];
         const str   = "aaa";
+        const strOverMax   = "1234567890abcdefghij1234567890abcdefghij1234567890abcdefghij";
         const obj   = {a: 1, b: 2, c: 3};
 
-        const args = formatToObject`${c} class instance, array ${array}, other array ${array2} string ${str}, number ${42}, object ${obj}`;
+        const args = formatToObject`${c} class instance, array ${array}, large array ${arrayOverMax}, string ${str}, large string ${strOverMax} number ${42}, object ${obj}`;
 
         assert.strictEqual(args[2], c.constructor.name);
         assert.strictEqual(args[5], `[${array.toString()}]`);
-        assert.strictEqual(args[8], `[${[...array2.slice(0, styles.node.maxArrayLength), '...']}]`);
-        assert.strictEqual(args[10], str);
-        assert.strictEqual(args[11], 42);
-        assert.strictEqual(args[13], obj.constructor.name);
+        assert.strictEqual(args[8], `[${[...arrayOverMax.slice(0, styles.node.maxArrayLength), '...']}]`);
+        assert.strictEqual(args[10], 42);
+        assert.strictEqual(args[12], obj.constructor.name);
 
-        const collectedObject = args[15];
-        assert.deepStrictEqual(collectedObject['Array#2'], array2);
-        assert.deepStrictEqual(collectedObject['Object#5'], obj);
+        const collectedObject = args[14];
+        assert.deepStrictEqual(collectedObject['Array#2'], arrayOverMax);
+        assert.deepStrictEqual(collectedObject['Object#6'], obj);
+
         if (debug) console.log (...args);
     });
 
@@ -137,11 +138,10 @@ describe ("logsome", () => {
         const args = formatToObject`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`;
 
         assert.strictEqual(args[2], `[${array.toString()}]`);
-        assert.strictEqual(args[4], str);
-        assert.strictEqual(args[5], 42);
-        assert.strictEqual(args[7], obj.constructor.name);
+        assert.strictEqual(args[4], 42);
+        assert.strictEqual(args[6], obj.constructor.name);
 
-        const collectedObject = args[9];
+        const collectedObject = args[8];
         assert.deepStrictEqual(collectedObject.array, array);
         assert.deepStrictEqual(collectedObject.obj, obj);
         assert.deepStrictEqual(collectedObject.str, str);

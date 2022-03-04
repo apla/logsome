@@ -94,9 +94,9 @@ function argDumper (style, arg, index, fills, tail) {
 			return style.styledTemplate || formatArgs.join('');
 		}
 
-	} else if (arg.constructor instanceof String) {
+	} else if (arg.constructor === String) { // typeof(arg) === 'string' || arg instanceof String
 		if (style.maxStringLength && arg.length > style.maxStringLength) {
-			Array.isArray(tail) ? tail.push (arg) : tail[String + '#' + index] = arg;
+			Array.isArray(tail) ? tail.push (arg) : tail['String#' + index] = arg;
 			return ['', arg.slice(0, style.maxStringLength) + '...', ''].join ('"');
 		}
 		return '"' + arg + '"'; // <string>
