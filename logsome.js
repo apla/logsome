@@ -321,10 +321,6 @@ function sendingFromNode (serverName, message, fills, values) {
 		headers: {'Content-Type': contentType},
 	};
 
-	console.log(url);
-	console.log(requestOptions);
-	console.log(dataToSend);
-
 	// TODO: check for http/https
 
 	return import (urlObject.protocol.slice(0, -1)).then (https => {
@@ -336,13 +332,11 @@ function sendingFromNode (serverName, message, fills, values) {
 			
 				let body = Buffer.alloc (0);
 				
-	
 				res.on ('data', chunk => body = Buffer.concat ([body, chunk]));
 				res.on ('error', _err => (err = _err));
 				res.on ('end', () => {
-					console.error('---------', body.toString(), '---------');
 					if (err) {
-						console.error(body.toString(), err);
+						// console.error(body.toString(), err);
 						reject (err);
 					} else if (res.statusCode === 200) {
 						resolve ({statusCode: res.statusCode, headers: res.headers, body: body});
@@ -352,7 +346,6 @@ function sendingFromNode (serverName, message, fills, values) {
 				});
 			});
 			req.on('error', err => {
-				// console.error(err);
 				reject(err);
 			});
 			req.write(dataToSend);
