@@ -4,20 +4,26 @@ App objects consumable by loggers and reporters
 
 ## TL;DR
 
+Code:
+
 ```javascript
 const array = [1,2,3];
 const str   = "aaa";
 const obj   = {a: 1, b: 2, c: 3};
-console.log (...format`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`);
+console.log (...report`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`);
 ```
 
-Node.js console
+Node.js console:
 
 ![](https://github.com/apla/logsome/blob/docs/logsome-console.jpg?raw=true)
 
-Browser console
+Browser console:
 
 ![](https://github.com/apla/logsome/blob/docs/logsome-safari.jpg?raw=true)
+
+Loggly:
+
+![](https://github.com/apla/logsome/blob/docs/logsome-loggly.jpg?raw=true)
 
 ## Install
 
@@ -87,18 +93,44 @@ const sendR2 = endpoint('base');
 endpoint(`loggly:${logglyToken}`, {name: 'loggly'});
 const sendR3 = endpoint('loggly');
 
-
 ```
 
-## Features
+## API
 
-No one can tell what should be reported. List safe fields and avoid any sensitive data leak. Skip extra fields to reduce bandwith.
+### format\`template\`
 
- * Logging object can describe it's own stringified version with `toString()` and report fields with `toJSON()` (node have [`util.inspect.custom`](https://nodejs.org/api/util.html#utilinspectobject-showhidden-depth-colors));
- * Formatting and reporting configurable per object (but please use class instances);
- * TODO: You can turn off logging per class by class name ([WHATWG spec](https://console.spec.whatwg.org/#logger));
+Format and returns array, consumable by `console.log`
 
-### Rollup & Buble integration
+### endpoint(url, [options]) => report
+### endpoint(urlOrName) => report
+
+Creates or gets reporting object for endpoint. Custom url protocols can be used to simplify setup. Take a look at `loggly` string in the `logsome.js`. `void:` protocol can be used to avoid data submission.
+
+### report\`template\`
+
+Format message for log and send it to the endpoint.
+
+If `report` function imported, then it only can send data through default endpoint. Default endpoint have `.name` = '' or if there is no other enpoints configured. Throws error with `.code` = `NO_DEFAULT_ENDPOINT` if no default endpoint configured. `void:` endpoint not counting as configured endpoint.
+
+If `report` received as a result of `endpoint` call, it is bound to that endpoint.
+
+Returned array contains `.sending` thenable property. Usually it is not needed for long running scripts.
+
+### styles
+
+Style description for displaying different objects
+
+### locators
+
+Locator methods to support custom url schemes.
+
+### custom objects
+
+When object have `Symbol.for('logsome')` method, returned custom `title` and `style` will be displayed instead of standard ones. Returned `facade` function will be called and result is used instead of object. No one can tell what should be reported. List safe fields and avoid any sensitive data leak. Skip extra fields to reduce bandwith.
+
+## Notes
+
+### Browser: Rollup & Buble integration
 
 Seems like `buble` and `@rollup/plugin-buble` cannot parse string like `return import(…`.
 
@@ -118,3 +150,7 @@ replace({
 
 https://geshan.com.np/blog/2021/01/nodejs-logging-library/
 https://github.com/pinojs/pino/blob/master/docs/benchmarks.md
+
+### TODO: Web UI
+
+https://github.com/guigrpa/storyboard
