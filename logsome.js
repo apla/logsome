@@ -381,6 +381,14 @@ const servers = {};
  */
 function sender (serverNameOrUrl) {
 
+	if (serverNameOrUrl === 'void:') {
+		return function (strings, ...args) {
+			const forLog = formatter({style: styles[runtime]}, strings, ...args);
+			Object.defineProperty(forLog, 'sending', {value: Promise.resolve, enumerable: false, writable: false});
+			return forLog;
+		}
+	}
+
 	const serverConfig = servers[serverNameOrUrl];
 
 	const url = serverConfig.url;
@@ -395,14 +403,10 @@ function sender (serverNameOrUrl) {
 
 	return function (strings, ...args) {
 		const forLog = formatter({style: styles[runtime]}, strings, ...args);
-		if (urlObject.protocol !== 'void:') {
-			const serverRuntime = (serverConfig.options || {}).styles || 'server';
-			const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
-			const promise   = sending(forServer.template, ...forServer.fills, forServer.tail);
-			Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});	
-		} else {
-			Object.defineProperty(forLog, 'sending', {value: Promise.resolve(), enumerable: false, writable: false});	
-		}
+		const serverRuntime = (serverConfig.options || {}).styles || 'server';
+		const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
+		const promise   = sending(forServer.template, forServer.fills, forServer.tail);
+		Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});	
 	
 		return forLog;
 	}
@@ -418,7 +422,13 @@ function sender (serverNameOrUrl) {
  */
 export function endpoint (url, {name, data, options} = {}) {
 	
+	// already have registered endpoint
 	if (url in servers && !name) {
+		return sender(url);
+	}
+
+	// void: protocol
+	if (url === 'void:') {
 		return sender(url);
 	}
 
@@ -440,9 +450,33 @@ export function endpoint (url, {name, data, options} = {}) {
 	}
 
 	servers[url]  = serverConf;
-	if (name)
+	if (name || name === '') // allows empty name
 		servers[name] = serverConf;
 	return sender(url);
+}
+
+/**
+ * Format message for log and send it via default endpoint.
+ * Default endpoint have `.name` = '' or if there is no other enpoints configured.
+ * Throws error with `.code` = `NO_DEFAULT_ENDPOINT`
+ * @param {String[]} strings template strings
+ * @param  {...any} args template args
+ * @returns {any[]}
+ */
+export function report (strings, ...args) {
+	const serverKeys = Object.keys(servers);
+	let senderFn;
+	if (serverKeys.length === 1) {
+		senderFn = endpoint(serverKeys[0]);
+	} else if (servers['']) {
+		senderFn = endpoint('');
+	} else {
+		const err = new Error ("Default endpoint not configured");
+		// @ts-ignore
+		err.code = 'NO_DEFAULT_ENDPOINT'
+		throw err;
+	}
+	return senderFn(strings, ...args);
 }
 
 export default {
