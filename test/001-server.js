@@ -48,11 +48,10 @@ describe ("logsome endpoint", () => {
     logglyMethod ("with loggly", async () => {
         logsome.endpoint(`loggly:${logglyToken}`, {name: 'loggly'});
         const sendr = logsome.endpoint('loggly');
-        const str = "123";
+        const str = "aaa";
         const obj = {a: 1, b: 2, c: 3};
-        const array  = ['a', 'b'];
-        return await sendr`test is ${"ok"}, ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`.sending;
-
+        const array  = [1, 2, 3];
+        return await sendr`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`.sending;
     });
 
 
