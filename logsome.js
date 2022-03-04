@@ -16,22 +16,21 @@
  */
 
 /**
- * 
+ * Stringify single argument
  * @param {FormatStyles} style formatting styles
- * @param {String} str string chunk before arg
  * @param {*} arg template string arg
  * @param {Number} index arg index
  * @param {any[]} fills array of fills
  * @param {Array|Object} tail complex objects to dump
  * @returns 
  */
-function argDumper (style, str, arg, index, fills, tail) {
+function argDumper (style, arg, index, fills, tail) {
 	if (!arg) {
 		if (style.supportsPercent) {
 			fills.push (arg);
-			return str + '%o';
+			return '%o';
 		}
-		return str + arg; // 0, false, undefined, null, NaN
+		return arg; // 0, false, undefined, null, NaN
 	}
 
 	if (typeof arg === 'function') {
@@ -46,7 +45,7 @@ function argDumper (style, str, arg, index, fills, tail) {
 		];
 		if (style.supportsPercent) fills.push (...formatArgs);
 
-		return str + (style.styledTemplate || formatArgs.join(''));
+		return style.styledTemplate || formatArgs.join('');
 	} else if (Array.isArray(arg)) {
 		if (arg.length > style.maxArrayLength) {
 			Array.isArray(tail) ? tail.push (arg) : tail['Array#' + index] = arg;
@@ -60,7 +59,7 @@ function argDumper (style, str, arg, index, fills, tail) {
 		];
 		if (style.supportsPercent) fills.push (...formatArgs);
 
-		return str + (style.styledTemplate || formatArgs.join(''));
+		return style.styledTemplate || formatArgs.join('');
 
 	} else if (arg === Object(arg)) {
 		let tailValue = (style.stringify && arg.toJSON) ? arg.toJSON() : arg;
@@ -73,15 +72,9 @@ function argDumper (style, str, arg, index, fills, tail) {
 		if (style.collectArgs && !customFormat && argConstructorName === 'Object' && argKeys.length === 1) {
 			const tailKey = argKeys[0];
 			tailValue = arg[tailKey];
-			if (Array.isArray(tail)) {
-				tail.push(tailValue);
-				// avoid recursion with collectArgs
-				return argDumper ({...style, collectArgs: false}, str, tailValue, index, fills, []);
-			} else {
-				tail[tailKey] = tailValue;
-				// avoid recursion with collectArgs
-				return argDumper ({...style, collectArgs: false}, str, tailValue, index, fills, {});
-			}
+			tail[tailKey] = tailValue;
+			// avoid recursion with collectArgs
+			return argDumper ({...style, collectArgs: false}, tailValue, index, fills, {});
 			
 		} else {
 			if (Array.isArray(tail)) {
@@ -98,21 +91,21 @@ function argDumper (style, str, arg, index, fills, tail) {
 			
 			if (style.supportsPercent) fills.push (...formatArgs);
 	
-			return str + (style.styledTemplate || formatArgs.join(''));
+			return style.styledTemplate || formatArgs.join('');
 		}
 
 	} else if (arg.constructor instanceof String) {
 		if (style.maxStringLength && arg.length > style.maxStringLength) {
 			Array.isArray(tail) ? tail.push (arg) : tail[String + '#' + index] = arg;
-			return [str, arg.slice(0, style.maxStringLength), '...'].join ('"');
+			return ['', arg.slice(0, style.maxStringLength) + '...', ''].join ('"');
 		}
-		return [str, arg, ''].join ('"'); // <string>
+		return '"' + arg + '"'; // <string>
 	} else {
 		if (style.supportsPercent) {
 			fills.push (arg);
-			return str + '%o';
+			return '%o';
 		}
-		return str + arg; // true
+		return arg; // true
 	}
 }
 
@@ -120,7 +113,7 @@ function argDumper (style, str, arg, index, fills, tail) {
 // consume that object by consoleExporter and return list
 // for console.* methods
 /**
- * Template string args formatter 
+ * Format template string args
  * @param {Object} binding binding object
  * @param {FormatStyles} binding.style binding object
  * @param {Boolean} [binding.wantsObject] return object instead of array
@@ -140,15 +133,19 @@ export function formatter ({style, wantsObject}, strings, ...args) {
 	const fills  = [];
 	/** @type {Array|Object} */
 	const tail = (style.collectArgs ? {} : []);
-	const chunks = strings.map ((str, idx, arr) => {
-		if (arr.length - idx === 1)
-			return str;
+	const chunks = strings.reduce ((accum, str, idx, arr) => {
+		if (arr.length - idx === 1) {
+			accum.push(str);
+			return accum;
+		}
 		
 		const arg = args[idx];
 		
-		return argDumper (style, str, arg, idx, fills, tail);
+		accum.push(str);
+		accum.push(argDumper (style, arg, idx, fills, tail));
 		
-	});
+		return accum;
+	}, []);
 
 	chunks.push(style.objectSeparator);
 
