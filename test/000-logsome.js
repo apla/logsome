@@ -93,6 +93,38 @@ describe ("logsome", () => {
         const collectedObject = args[15];
         assert.deepStrictEqual(collectedObject['Array#2'], array2);
         assert.deepStrictEqual(collectedObject['Object#5'], obj);
+        if (debug) console.log (...args);
+    });
+
+    it ("function logging", () => {
+        const f = function () {};
+
+        const args = format`${f}`;
+
+        assert.strictEqual(args.length, 5);
+
+        // template string
+        // ascii colors, skipped
+        // function name
+        assert.strictEqual (args[2], f.name);
+        // ascii colors clear, skipped
+        // class name + arg number
+        assert.strictEqual(args[4], f);
+
+        if (debug) console.log (...args);
+    });
+
+    it ("falsy logging", () => {
+        const args = format`${undefined} ${null} ${false} ${0}`;
+
+        assert.strictEqual(args.length, 5);
+
+        // template string
+        // values
+        assert.strictEqual (args[1], undefined);
+        assert.strictEqual (args[2], null);
+        assert.strictEqual (args[3], false);
+        assert.strictEqual (args[4], 0);
 
         if (debug) console.log (...args);
     });
