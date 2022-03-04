@@ -209,8 +209,14 @@ export const styles = {
 	},
 };
 
+/**
+ * @type {'browser'|'node'} Current runtime
+ */
 export const runtime = globalThis.window ? 'browser' : 'node';
 
+/**
+ * Default formatter for current runtime
+ */
 export const format = formatter.bind (null, {style: styles[runtime]});
 
 export const locators = {
@@ -262,7 +268,7 @@ export const locators = {
  * @param {Object} message text version of message to send
  * @returns {Promise}
  */
-function sendingFromBrowser (serverName, message, fills, values) {
+function sendingFromBrowser (serverName, message, fills, data) {
 
 	const serverConfig = servers[serverName];
 
@@ -271,7 +277,7 @@ function sendingFromBrowser (serverName, message, fills, values) {
 	const useBeacon = serverOptions.useBeacon;
 
 	// TODO: use formatter
-	const dataSerialized = JSON.stringify ({values, message});
+	const dataSerialized = JSON.stringify ({message, data});
 	let dataToSend = dataSerialized;
 
 	const contentType = (serverOptions.headers || {}).contentType || 'text/plain'; // 'multipart/mixed';  // 'application/x-www-form-urlencoded'; // 'application/json';
@@ -300,7 +306,7 @@ function sendingFromBrowser (serverName, message, fills, values) {
 	}
 }
 
-function sendingFromNode (serverName, message, fills, values) {
+function sendingFromNode (serverName, message, fills, data) {
 
 	const serverConfig = servers[serverName];
 
@@ -312,7 +318,7 @@ function sendingFromNode (serverName, message, fills, values) {
 	const contentType = (serverOptions.headers || {}).contentType || 'text/plain'; // 'multipart/mixed';  // 'application/x-www-form-urlencoded'; // 'application/json';
 
 	// TODO: serialize using formatter
-	const dataToSend = JSON.stringify({values, message});
+	const dataToSend = JSON.stringify({message, data});
 
 	/** @type {import ('https').RequestOptions} */
 	// const requestOptions = {};
