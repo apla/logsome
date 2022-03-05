@@ -199,4 +199,46 @@ describe ("logsome", () => {
         if (debug) console.log(...args);
     });
 
+    it ("this is special with facade", () => {
+
+        let args = [];
+
+        class Runner {
+            constructor(arg1, arg2) {
+                this.arg1 = arg1;
+                this.arg2 = arg2;
+            }
+            [Symbol.for('logsome')]() {
+                return {
+                    facade: () => {
+                        
+                        let clone = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+
+                        // copied everything, now delete arg2
+                        delete clone.arg2;
+                        
+                        return clone;
+                    }
+                }
+            }
+            test() {
+                args = formatToObject`${this} test method`;
+            }
+        }
+
+        const r = new Runner('a', 42);
+
+        r.test();
+
+        const tail = args[4];
+
+        const facadeObj = tail[Object.keys(tail)[0]];
+
+        assert.strictEqual(Object.keys(tail)[0], r.constructor.name + '#0');
+        assert.strictEqual(Object.keys(facadeObj).length, 1);
+        assert.strictEqual(facadeObj.arg1, 'a');
+
+        if (debug) console.log(...args);
+    });
+
 });

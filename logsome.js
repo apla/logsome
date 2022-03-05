@@ -62,11 +62,11 @@ function argDumper (style, arg, index, fills, tail) {
 		return style.styledTemplate || formatArgs.join('');
 
 	} else if (arg === Object(arg)) {
-		let tailValue = (style.stringify && arg.toJSON) ? arg.toJSON() : arg;
-
 		const customFormat = arg[Symbol.for('logsome')] && arg[Symbol.for('logsome')]();
 		const argConstructorName = arg.constructor.name;
 		const argKeys = Object.keys(arg);
+
+		let tailValue = customFormat && customFormat.facade ? customFormat.facade() : arg;
 
 		// TODO: maybe some heuristics to avoid false positives
 		if (style.collectArgs && !customFormat && argConstructorName === 'Object' && argKeys.length === 1) {
@@ -78,9 +78,9 @@ function argDumper (style, arg, index, fills, tail) {
 			
 		} else {
 			if (Array.isArray(tail)) {
-				tail.push(arg);
+				tail.push(tailValue);
 			} else {
-				tail[argConstructorName + '#' + index] = arg;
+				tail[argConstructorName + '#' + index] = tailValue;
 			}
 
 			const formatArgs = [

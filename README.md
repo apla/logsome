@@ -126,7 +126,15 @@ Locator methods to support custom url schemes.
 
 ### custom objects
 
-When object have `Symbol.for('logsome')` method, returned custom `title` and `style` will be displayed instead of standard ones. Returned `facade` function will be called and result is used instead of object. No one can tell what should be reported. List safe fields and avoid any sensitive data leak. Skip extra fields to reduce bandwith.
+When object have `Symbol.for('logsome')` method, returned custom in the `title` and `style`
+keys will be displayed instead of standard ones. Function at `facade` key
+will be called and result is used instead of object. No one can tell what should be reported.List safe fields and avoid any sensitive data leak. Skip extra fields to reduce bandwith.
+
+Modern browsers and Node.js supports `Symbol.toStringTag`, but it is almost unusable
+due differences between node and browsers. First of all, browsers won't display
+`Symbol.toStringTag` when inspecting objects in console. It is displayed only
+when object stringified. Node.js displays `Symbol.toStringTag` in square brackets
+after class name.
 
 ## Notes
 
