@@ -1,6 +1,6 @@
 {
   "name": "logsome",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Prepare app objects to be consumable by loggers",
   "main": "logsome.js",
   "type": "module",
@@ -11,8 +11,8 @@
     }
   },
   "scripts": {
-    "test": "jasmine --reporter=node_modules/jamocha/spec.js --config=test/.jasmine.json"
     "prepare": "npx rollup logsome.js --file logsome.cjs --format cjs && npx rollup logsome.js --exports named --name logsome --file logsome.umd.js --format umd",
+    "test": "jasmine --reporter=node_modules/jamocha/spec.js --config=test/.jasmine.json"
   },
   "repository": {
     "type": "git",
