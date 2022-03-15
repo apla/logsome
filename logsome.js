@@ -446,7 +446,7 @@ function sender (serverNameOrUrl) {
 		const forLog = formatter({style: styles[runtime]}, strings, ...args);
 		const serverRuntime = (serverConfig.options || {}).styles || 'server';
 		const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
-		const {_, tailRest} = forServer.tail;
+		const {_, ...tailRest} = forServer.tail;
 		const promise = sending(forServer.template, forServer.fills, {...tailRest, ..._});
 		Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});	
 	
