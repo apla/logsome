@@ -149,7 +149,9 @@ export function formatter ({style, wantsObject}, strings, ...args) {
 		return accum;
 	}, []);
 
-	chunks.push(style.objectSeparator);
+	if (style.collectArgs ? Object.keys(tail).length : tail.length) {
+		chunks.push(style.objectSeparator);
+	}
 
 	if (wantsObject) {
 		return {
