@@ -1,9 +1,20 @@
 import {format, styles, formatter, runtime} from '../logsome.js';
 
-const formatToObject = formatter.bind (null, {style: {
-    ...styles[runtime],
-    collectArgs: true
-}});
+const formatToObject = formatter.bind (null, {
+    /** @type {import('../logsome.js').FormatStyles} */
+    style: {
+        ...styles[runtime],
+        collectArgs: true
+    }
+});
+
+const formatFn = formatter.bind (null, {
+    /** @type {import('../logsome.js').FormatStyles} */
+    style: {
+        ...styles[runtime],
+        ignoreFnFormat: true
+    }
+});
 
 import assert from 'assert';
 
@@ -100,7 +111,7 @@ describe ("logsome", () => {
     it ("function logging", () => {
         const f = function () {};
 
-        const args = format`${f}`;
+        const args = formatFn`${f}`;
 
         assert.strictEqual(args.length, 5);
 

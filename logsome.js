@@ -13,6 +13,7 @@
  * @property {Boolean} supportsPercent log environment supports percent notation such as %s %o
  * @property {String} styledTemplate style template
  * @property {Boolean} collectArgs collect args into single structure
+ * @property {Boolean} [ignoreFnFormat=false] ignore function formatting, don't show any complaint about it
  */
 
 /**
@@ -34,7 +35,8 @@ function argDumper (style, arg, index, fills, tail) {
 	}
 
 	if (typeof arg === 'function') {
-		console.trace ("You're logging a function. Why?");
+		if (!style.ignoreFnFormat)
+			console.trace ("You're logging a function. Why?");
 		const fnName = (arg.name || 'anonymous');
 		Array.isArray(tail) ? tail.push (arg) : tail[fnName + '#' + index] = arg;
 		
