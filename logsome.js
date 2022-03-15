@@ -497,7 +497,7 @@ export function endpoint (url, {name, data, options} = {}) {
  * Format message for log and send it via default endpoint.
  * Default endpoint have `.name` = '' or if there is no other enpoints configured.
  * Throws error with `.code` = `NO_DEFAULT_ENDPOINT`
- * @param {String[]} strings template strings
+ * @param {String[]|TemplateStringsArray} strings template strings
  * @param  {...any} args template args
  * @returns {any[]}
  */

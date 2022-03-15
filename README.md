@@ -66,7 +66,9 @@ Works in the [browser (Chrome 62+, Safari 11+, Firefox 53+) and in the Node.js (
 // log formatting
 import {format} from 'logsome';
 
-console.log (...format`${this} just launched`);
+// `obj` class name and `just launched` suffix will be in console,
+// followed by inspectable `obj` object
+console.log (...format`${obj} just launched`);
 
 // TODO: not yet implemented
 // mute unneeded logs in console
@@ -82,8 +84,15 @@ const sender = endpoint('https://site.com/api/v1/log', {name: 'remote'});
 // use everywhere
 const sendR1 = endpoint('remote');
 
-// send something
-console.log(...sendR1`${this} just launched`);
+// `obj` class name and `just launched` suffix will be in console,
+// followed by inspectable `obj` object
+console.log (...sendR1`${obj} just launched`);
+
+// `obj` class name and `just launched` suffix will be in console,
+// followed by inspectable `obj` object. `obj` will be placed
+// into `obj` key of reported data
+console.log (...sendR1`${{obj}} just launched`);
+
 
 // void endpoint to temporarily disable remote endpoint
 endpoint(`void:`, {name: 'base'});
@@ -165,11 +174,22 @@ replace({
 }),
 ```
 
-### TODO: Comparison
+## TODO
+
+### Comparison
 
 https://geshan.com.np/blog/2021/01/nodejs-logging-library/
 https://github.com/pinojs/pino/blob/master/docs/benchmarks.md
 
-### TODO: Web UI
+### Web UI
 
 https://github.com/guigrpa/storyboard
+
+### Optimization
+
+ * use acorn to find out log levels (info, debug, …)
+ * find out why profiler reports SearchString all the time
+```
+    439   47.7%   50.1%  t unsigned long node::stringsearch::SearchString<unsigned short>(node::stringsearch::Vector<unsigned short const>, node::stringsearch::Vector<unsigned short const>, unsigned long)
+    321   34.9%   36.6%  T __kernelrpc_thread_policy_set
+```

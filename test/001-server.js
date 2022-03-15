@@ -24,6 +24,7 @@ describe ("logsome endpoint", () => {
 
         assert(Array.isArray(senderArgs));
 
+        // @ts-ignore
         assert(senderArgs.sending);
 
         assert.strictEqual(senderArgs.length, formatArgs.length);
