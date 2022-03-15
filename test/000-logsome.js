@@ -1,4 +1,4 @@
-import {format, styles, formatter, runtime} from '../logsome.js';
+import {format, styles, formatter, runtime, classes, customizations} from '../logsome.js';
 
 const formatToObject = formatter.bind (null, {
     /** @type {import('../logsome.js').FormatStyles} */
@@ -15,6 +15,18 @@ const formatFn = formatter.bind (null, {
         ignoreFnFormat: true
     }
 });
+
+const formatServer = formatter.bind (null, {
+    /** @type {import('../logsome.js').FormatStyles} */
+    style: {
+        ...styles.server,
+        ignoreFnFormat: true
+    }
+});
+
+
+// Error presentation
+classes[/Error$/] = customizations[/Error$/];
 
 import assert from 'assert';
 
@@ -223,11 +235,11 @@ describe ("logsome", () => {
                 return {
                     facade: () => {
                         
-                        let clone = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+                        // copy everything except arg2
+                        const {arg2, ...props} = this;
+                        // make sure class name and prototype is copied as well
+                        let clone = Object.assign(Object.create(Object.getPrototypeOf(this)), props);
 
-                        // copied everything, now delete arg2
-                        delete clone.arg2;
-                        
                         return clone;
                     }
                 }
@@ -248,6 +260,18 @@ describe ("logsome", () => {
         assert.strictEqual(Object.keys(tail)[0], r.constructor.name + '#0');
         assert.strictEqual(Object.keys(facadeObj).length, 1);
         assert.strictEqual(facadeObj.arg1, 'a');
+
+        if (debug) console.log(...args);
+    });
+
+    it ("special class handling: Error", () => {
+
+        const err = new TypeError('Not an error');
+
+        const args = formatToObject`Error: ${err}`;
+
+        assert.strictEqual(args[1], classes[/Error$/].style.node);
+        assert.strictEqual(args[2], err.constructor.name);
 
         if (debug) console.log(...args);
     });

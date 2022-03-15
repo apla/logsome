@@ -64,8 +64,20 @@ function argDumper (style, arg, index, fills, tail) {
 		return style.styledTemplate || formatArgs.join('');
 
 	} else if (arg === Object(arg)) {
-		const customFormat = arg[Symbol.for('logsome')] && arg[Symbol.for('logsome')]();
 		const argConstructorName = arg.constructor.name;
+
+		let customFormat;
+		// some global classes can have own styles; TODO: compile patterns
+		const classNameMatches = Object.keys(classes).filter(classPattern => {
+			const restoredRegex = RegExp.apply(RegExp, classPattern.match(/^\/(.*)\/(.*)$/).slice(1));
+			return argConstructorName.match(restoredRegex);
+		});
+		if (classNameMatches.length && arg instanceof classes[classNameMatches[0]].classRef) {
+			customFormat = classes[classNameMatches[0]];
+		} else if (arg[Symbol.for('logsome')]) {
+			customFormat = arg[Symbol.for('logsome')]();
+		}
+		
 		const argKeys = Object.keys(arg);
 
 		let tailValue = customFormat && customFormat.facade ? customFormat.facade() : arg;
@@ -167,6 +179,22 @@ export function formatter ({style, wantsObject}, strings, ...args) {
 }
 
 const roundedStyle = 'border-radius: 2px;';
+
+export const customizations = {
+	// @ts-ignore
+	[/Error$/]: {
+		classRef: Error, // just to ensure class match by class constructor, not name
+		style: {browser: 'background-color: #f63;', node: '\x1b[31m'}
+	},
+	// @ts-ignore
+	[/Element$/]: {
+		classRef: Error, // just to ensure class match by class constructor, not name
+		style: {browser: 'background-color: #4ae;', node: '\x1b[37m'}
+	},
+};
+
+export const classes = {
+};
 
 /**
  * @type {Object<String,FormatStyles>}
@@ -315,7 +343,7 @@ function sendingFromNode (serverName, message, fills, data) {
 	const serverConfig = servers[serverName];
 
 	const url = serverConfig.url;
-	const urlObject = new URL (url);
+	const urlObject = new URL(url);
 
 	const serverOptions = serverConfig.options || {};
 

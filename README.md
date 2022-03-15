@@ -93,6 +93,12 @@ const sendR2 = endpoint('base');
 endpoint(`loggly:${logglyToken}`, {name: 'loggly'});
 const sendR3 = endpoint('loggly');
 
+// Customization for external classes can be specified
+// within `classes` export. Some predefined customizations available
+// within `customizations` export. Please note performance degradation.
+import {classes, customizations} from 'logsome';
+classes[/Error$/] = customizations[/Error$/];
+
 ```
 
 ## API
@@ -124,7 +130,7 @@ Style description for displaying different objects
 
 Locator methods to support custom url schemes.
 
-### custom objects
+### custom presentation, embedded within class
 
 When object have `Symbol.for('logsome')` method, returned custom in the `title` and `style`
 keys will be displayed instead of standard ones. Function at `facade` key
@@ -135,6 +141,11 @@ due differences between node and browsers. First of all, browsers won't display
 `Symbol.toStringTag` when inspecting objects in console. It is displayed only
 when object stringified. Node.js displays `Symbol.toStringTag` in square brackets
 after class name.
+
+### custom presentation, external
+
+When you want to present some external classes, import `classes` from logsome.
+Take a look an example from `customizations` export.
 
 ## Notes
 
