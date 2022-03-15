@@ -93,6 +93,11 @@ console.log (...sendR1`${obj} just launched`);
 // into `obj` key of reported data
 console.log (...sendR1`${{obj}} just launched`);
 
+// `obj` class name and `just launched` suffix will be in console,
+// followed by inspectable `obj` object. `_` is ignored by format,
+// but merged into repoerted data
+console.log (...sendR1`${{obj}} just launched${_: {loglevel: 'log'}}`);
+
 
 // void endpoint to temporarily disable remote endpoint
 endpoint(`void:`, {name: 'base'});

@@ -276,4 +276,26 @@ describe ("logsome", () => {
         if (debug) console.log(...args);
     });
 
+    it("underscore property is a special; client", () => {
+
+        const args = format`underscore and nothing more${{_: {loglevel: 'warn'}}}`;
+
+        assert.strictEqual(args.length, 1);
+        assert.strictEqual(args[0], 'underscore and nothing more');
+
+        if (debug) console.log(...args);
+    });
+
+    it ("underscore property is a special; server", () => {
+
+        const argsServer = formatServer`underscore and nothing more${{_: {loglevel: 'warn'}}}`;
+
+        assert.strictEqual(argsServer.length, 2);
+        assert.strictEqual(argsServer[0], 'underscore and nothing more');
+        assert.deepStrictEqual(Object.keys(argsServer[1]), ['_']);
+        assert.deepStrictEqual(argsServer[1]['_'], {loglevel: 'warn'});
+
+        if (debug) console.log(...argsServer);
+    });
+
 });

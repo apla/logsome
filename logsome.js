@@ -83,13 +83,16 @@ function argDumper (style, arg, index, fills, tail) {
 		let tailValue = customFormat && customFormat.facade ? customFormat.facade() : arg;
 
 		// TODO: maybe some heuristics to avoid false positives
-		if (style.collectArgs && !customFormat && argConstructorName === 'Object' && argKeys.length === 1) {
-			const tailKey = argKeys[0];
-			tailValue = arg[tailKey];
-			tail[tailKey] = tailValue;
-			// avoid recursion with collectArgs
-			return argDumper ({...style, collectArgs: false}, tailValue, index, fills, {});
-			
+		if (!customFormat && argConstructorName === 'Object' && argKeys.length === 1) {
+			if (style.collectArgs) {
+				const tailKey = argKeys[0];
+				tailValue = arg[tailKey];
+				tail[tailKey] = tailValue;
+				// avoid recursion with collectArgs
+				return argDumper ({...style, collectArgs: false}, tailValue, index, fills, {});
+			} else if (argKeys[0] === '_') {
+				// _ is a specific key to add additional context for server
+			}
 		} else {
 			if (Array.isArray(tail)) {
 				tail.push(tailValue);
@@ -443,7 +446,8 @@ function sender (serverNameOrUrl) {
 		const forLog = formatter({style: styles[runtime]}, strings, ...args);
 		const serverRuntime = (serverConfig.options || {}).styles || 'server';
 		const forServer = formatter({style: styles[serverRuntime], wantsObject: true}, strings, ...args);
-		const promise   = sending(forServer.template, forServer.fills, forServer.tail);
+		const {_, tailRest} = forServer.tail;
+		const promise = sending(forServer.template, forServer.fills, {...tailRest, ..._});
 		Object.defineProperty(forLog, 'sending', {value: promise, enumerable: false, writable: false});	
 	
 		return forLog;
