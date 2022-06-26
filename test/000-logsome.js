@@ -1,5 +1,7 @@
 import {endpoint, format, styles, formatter, runtime, classFormats} from '../logsome.js';
 
+const report = endpoint('void:');
+
 /** @typedef {import('../logsome.js').FormatStyle} FormatStyle */
 
 const formatToObject = formatter.bind (null, {
@@ -142,9 +144,13 @@ describe ("logsome", () => {
 
         const data3 = format`${obj} ${{target}} ${{zero}}/${{one}}`;
 
+        const data4 = report`${obj} ${{target}} ${{zero}}/${{one}}`;
+
         assert.deepStrictEqual(data1, data2);
 
         assert.deepStrictEqual(data2, data3);
+
+        assert.deepStrictEqual(data3, data4);
 
     });
 

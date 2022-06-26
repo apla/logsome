@@ -95,7 +95,7 @@ console.log (...sendR1`${{obj}} just launched`);
 
 // `obj` class name and `just launched` suffix will be in console,
 // followed by inspectable `obj` object. `_` is ignored by format,
-// but merged into repoerted data
+// but merged into reported data
 console.log (...sendR1`${{obj}} just launched${_: {loglevel: 'log'}}`);
 
 
@@ -124,13 +124,29 @@ Format and returns array, consumable by `console.log`
 ### endpoint(url, [options]) => report
 ### endpoint(urlOrName) => report
 
-Creates or gets reporting object for endpoint. Custom url protocols can be used to simplify setup. Take a look at `loggly` string in the `logsome.js`. `void:` protocol can be used to avoid data submission.
+Creates or gets reporting object for endpoint. Custom url protocols can be used
+to simplify setup. Take a look at `locators/loggly.js`.
+`void:` protocol can be used to skip data submission.
+
+```javascript
+let debugEndpoint = 'void:';
+if (process.env.DEBUG) {
+    debugEndpoint = 'local:';
+}
+
+const debugSender = endpoint(debugEndpoint);
+
+console.log(...debugSender`debug`);
+```
 
 ### report\`template\`
 
 Format message for log and send it to the endpoint.
 
-If `report` function imported, then it only can send data through default endpoint. Default endpoint have `.name` = '' or if there is no other enpoints configured. Throws error with `.code` = `NO_DEFAULT_ENDPOINT` if no default endpoint configured. `void:` endpoint not counting as configured endpoint.
+If `report` function imported, then it only can send data through default endpoint.
+Default endpoint have `.name` = '' or if there is no other enpoints configured.
+Throws error with `.code` = `NO_DEFAULT_ENDPOINT` if no default endpoint configured.
+`void:` endpoint not counting as configured endpoint.
 
 If `report` received as a result of `endpoint` call, it is bound to that endpoint.
 
@@ -142,7 +158,42 @@ Style description for displaying different objects
 
 ### locators
 
-Locator methods to support custom url schemes.
+Locator is a function to create report sender configuration from url. 
+Example in `locators/loggly.js`
+
+```javascript
+
+import {locators} from 'logsome';
+
+locators['local'] = local3KLocator;
+
+const sender = logsome.endpoint('local:');
+
+console.log(...sender`hello`);
+
+function local3KLocator(url) {
+
+    return {
+        url: `http://localhost:3000/api/v1/logs`,
+        data: {
+            // TODO: add IP and more meta
+            // hostname: typeof process !== 'undefined' ? require('os').hostname() : undefined,
+            pid: typeof process !== 'undefined' ? process.pid : undefined,
+            
+        },
+        options: {
+            styles: 'server',
+            headers: {
+                contentType: 'application/json'
+            },
+            method: 'POST'
+        }
+    }
+}
+
+
+
+```
 
 ### custom presentation, embedded within class
 

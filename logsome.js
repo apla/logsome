@@ -300,44 +300,18 @@ export const format = formatter.bind (null, {style: styles[runtime]});
 
 /** @type {Object<String,(url: String) => LogsomeServer>} */
 export const locators = {
-	
-	/**
-	 * Loggly url to endpoint conversion routine
-	 * @param {String} url url to parse
-	 * @returns {LogsomeServer}
-	 */
-	loggly(url) {
-
-		// expects url like loggly:aaaabbbb-cccc-dddd-eeee-ffffgggghhhh
-		const parsedUrl = new URL(url);
-
-		// https://www.loggly.com/blog/node-js-libraries-make-sophisticated-logging-simpler/
-		// https://documentation.solarwinds.com/en/success_center/loggly/content/admin/http-endpoint.htm
-		const customerToken = parsedUrl.pathname;
-
-		// TODO: loggly supports tags like /^[\w\d][\w\d-_.]+/
-		// tags can be sent as a part of URL after /tag/
-		// or using X-LOGGLY-TAG header. tag separator is comma
-
-		const endpointType = 'inputs'; // also 'bulk'
-
-		const endpointUrl = `https://logs-01.loggly.com/${endpointType}/${customerToken}/tag/http/`;
+	http (url) {
 		return {
-			url: endpointUrl,
-			data: {
-				// TODO: add IP and more meta
-				// clientHost is automatically populated by loggly
-				// hostname: typeof process !== 'undefined' ? require('os').hostname() : undefined,
-				pid: typeof process !== 'undefined' ? process.pid : undefined,
-				
-			},
-			options: {
-				styles: 'server',
-				headers: {
-					contentType: 'application/json'
-				},
-				method: 'POST'
-			}
+			url,
+			data: {},
+			options: {}
+		}
+	},
+	https (url) {
+		return {
+			url,
+			data: {},
+			options: {}
 		}
 	}
 };
@@ -389,7 +363,56 @@ function sendingFromBrowser (serverName, message, fills, data) {
 	}
 }
 
-function sendingFromNode (serverName, message, fills, data) {
+/** @typedef {import('http').RequestOptions} RequestOptions */
+
+/**
+ * 
+ * @param {import('https')} https http/https module
+ * @param {String} url url
+ * @param {RequestOptions} requestOptions request options
+ * @param {String} dataToSend data to send
+ * @returns {Promise}
+ */
+function requesting (https, url, requestOptions, dataToSend) {
+	return new Promise((resolve, reject) => {
+
+		let err;
+
+		const req = https.request (url, requestOptions, (res) => {
+		
+			let body = Buffer.alloc (0);
+			
+			res.on ('data', chunk => body = Buffer.concat ([body, chunk]));
+			res.on ('error', _err => (err = _err));
+			res.on ('end', () => {
+				if (err) {
+					// console.error(body.toString(), err);
+					reject (err);
+				} else if (res.statusCode === 200) {
+					resolve ({statusCode: res.statusCode, headers: res.headers, body: body});
+				} else {
+					reject ('Request failed. status: ' + res.statusCode + ', body: ' + body);
+				}
+			});
+		});
+		req.on('error', err => {
+			reject(err);
+		});
+		req.write(dataToSend);
+		req.end();
+
+	});
+}
+
+/**
+ * Send log messages from browser
+ * @param {String} serverName server name
+ * @param {Object} message text version of message to send
+ * @param {Object | Array} fills 
+ * @param {Object} data data payload to send
+ * @returns {Promise}
+ */
+async function sendingFromNode (serverName, message, fills, data) {
 
 	const serverConfig = servers[serverName];
 
@@ -410,39 +433,15 @@ function sendingFromNode (serverName, message, fills, data) {
 		headers: {'Content-Type': contentType},
 	};
 
-	// TODO: check for http/https
+	const protocol = urlObject.protocol.slice(0, -1);
+	if (protocol === 'file') {
+		const fs = await import('fs/promises');
+	} else if (protocol.match(/^https?$/)) {
+		/** @type {import('https')} */
+		const https = await import(protocol);
 
-	return import (urlObject.protocol.slice(0, -1)).then (https => {
-		return new Promise((resolve, reject) => {
-
-			let err;
-
-			const req = https.request (url, requestOptions, (res) => {
-			
-				let body = Buffer.alloc (0);
-				
-				res.on ('data', chunk => body = Buffer.concat ([body, chunk]));
-				res.on ('error', _err => (err = _err));
-				res.on ('end', () => {
-					if (err) {
-						// console.error(body.toString(), err);
-						reject (err);
-					} else if (res.statusCode === 200) {
-						resolve ({statusCode: res.statusCode, headers: res.headers, body: body});
-					} else {
-						reject ('Request failed. status: ' + res.statusCode + ', body: ' + body);
-					}
-				});
-			});
-			req.on('error', err => {
-				reject(err);
-			});
-			req.write(dataToSend);
-			req.end();
-	
-		});
-	});
-
+		return requesting(https, url, requestOptions, dataToSend);
+	}
 }
 
 /**
@@ -469,15 +468,15 @@ const servers = {};
  */
 function sender (serverNameOrUrl) {
 
-	if (serverNameOrUrl === 'void:') {
+	const serverConfig = servers[serverNameOrUrl];
+
+	if (serverNameOrUrl === 'void:' || serverConfig.url === 'void:') {
 		return function (strings, ...args) {
 			const forLog = formatter({style: styles[runtime]}, strings, ...args);
 			Object.defineProperty(forLog, 'sending', {value: Promise.resolve, enumerable: false, writable: false});
 			return forLog;
 		}
 	}
-
-	const serverConfig = servers[serverNameOrUrl];
 
 	const url = serverConfig.url;
 	const urlObject = new URL (url);
@@ -518,6 +517,9 @@ export function endpoint (url, {name, data, options} = {}) {
 
 	// void: protocol
 	if (url === 'void:') {
+		if (name) {
+			servers[name] = {url};
+		}
 		return sender(url);
 	}
 
@@ -531,11 +533,7 @@ export function endpoint (url, {name, data, options} = {}) {
 	if (protocolName in locators) {
 		serverConf = locators[protocolName](url);
 	} else {
-		serverConf = {
-			url,
-			data,
-			options
-		};
+		throw new Error(`Cannot find locator for url: ${url}`);
 	}
 
 	servers[url]  = serverConf;
