@@ -1,4 +1,4 @@
-import {format, styles, formatter, runtime, classes, customizations} from '../logsome.js';
+import {endpoint, format, styles, formatter, runtime, classFormats} from '../logsome.js';
 
 const formatToObject = formatter.bind (null, {
     /** @type {import('../logsome.js').FormatStyles} */
@@ -26,7 +26,7 @@ const formatServer = formatter.bind (null, {
 
 
 // Error presentation
-classes[/Error$/] = customizations[/Error$/];
+classFormats.installPredefined();
 
 import assert from 'assert';
 
@@ -119,6 +119,34 @@ describe ("logsome", () => {
 
         if (debug) console.log (...args);
     });
+
+    it ("primitive values in object", () => {
+
+        const obj = {
+            type: 23,
+            target: "obj",
+            toString () {
+                return "Widget"
+            }
+        };
+
+        const zero = 0;
+        const one = 1;
+        const target = obj.target;
+
+        const data1 = format`${obj} ${target} ${0}/${1}`;
+
+        const data2 = format`${obj} ${obj.target} ${zero}/${one}`;
+
+        const data3 = format`${obj} ${{target}} ${{zero}}/${{one}}`;
+
+        assert.deepStrictEqual(data1, data2);
+
+        assert.deepStrictEqual(data2, data3);
+
+    });
+
+
 
     it ("function logging", () => {
         const f = function () {};
@@ -270,7 +298,7 @@ describe ("logsome", () => {
 
         const args = formatToObject`Error: ${err}`;
 
-        assert.strictEqual(args[1], classes[/Error$/].style.node);
+        assert.notStrictEqual(args[1], styles[runtime].object);
         assert.strictEqual(args[2], err.constructor.name);
 
         if (debug) console.log(...args);

@@ -23,9 +23,11 @@
  * @param {Number} index arg index
  * @param {any[]} fills array of fills
  * @param {Array|Object} tail complex objects to dump
+ * @param {String} [tailKey] tail key
  * @returns 
  */
-function argDumper (style, arg, index, fills, tail) {
+function argDumper (style, arg, index, fills, tail, tailKey) {
+
 	if (!arg) {
 		if (style.supportsPercent) {
 			fills.push (arg);
@@ -38,7 +40,7 @@ function argDumper (style, arg, index, fills, tail) {
 		if (!style.ignoreFnFormat)
 			console.trace ("You're logging a function. Why?");
 		const fnName = (arg.name || 'anonymous');
-		Array.isArray(tail) ? tail.push (arg) : tail[fnName + '#' + index] = arg;
+		Array.isArray(tail) ? tail.push (arg) : tail[tailKey || fnName + '#' + index] = arg;
 		
 		const formatArgs = [
 			[style.fn, style.common].join (''),
@@ -49,7 +51,11 @@ function argDumper (style, arg, index, fills, tail) {
 
 		return style.styledTemplate || formatArgs.join('');
 	} else if (Array.isArray(arg)) {
-		if (arg.length > style.maxArrayLength) {
+		if (tailKey) {
+			if (!Array.isArray(tail)) {
+				tail[tailKey] = arg;
+			}
+		} else if (arg.length > style.maxArrayLength) {
 			Array.isArray(tail) ? tail.push (arg) : tail['Array#' + index] = arg;
 		}
 
@@ -66,38 +72,47 @@ function argDumper (style, arg, index, fills, tail) {
 	} else if (arg === Object(arg)) {
 		const argConstructorName = arg.constructor.name;
 
-		let customFormat;
+		let customFormat, customClassPattern, customClassFormat;
 		// some global classes can have own styles; TODO: compile patterns
-		const classNameMatches = Object.keys(classes).filter(classPattern => {
-			const restoredRegex = RegExp.apply(RegExp, classPattern.match(/^\/(.*)\/(.*)$/).slice(1));
-			return argConstructorName.match(restoredRegex);
-		});
-		if (classNameMatches.length && arg instanceof classes[classNameMatches[0]].classRef) {
-			customFormat = classes[classNameMatches[0]];
+		for (const [classPattern, classLogProps] of classFormats.all) {
+			if (!argConstructorName.match(classPattern)) {
+				continue;
+			}
+
+			customClassPattern  = classPattern;
+			customClassFormat = classLogProps;
+			break;
+		}
+
+		if (customClassPattern && customClassFormat && arg instanceof customClassFormat.classRef) {
+			customFormat = customClassFormat;
 		} else if (arg[Symbol.for('logsome')]) {
 			customFormat = arg[Symbol.for('logsome')]();
 		}
-		
+
 		const argKeys = Object.keys(arg);
 
 		let tailValue = customFormat && customFormat.facade ? customFormat.facade() : arg;
 
 		// TODO: maybe some heuristics to avoid false positives
 		if (!customFormat && argConstructorName === 'Object' && argKeys.length === 1) {
-			if (style.collectArgs) {
-				const tailKey = argKeys[0];
-				tailValue = arg[tailKey];
-				tail[tailKey] = tailValue;
-				// avoid recursion with collectArgs
-				return argDumper ({...style, collectArgs: false}, tailValue, index, fills, {});
-			} else if (argKeys[0] === '_') {
+			
+			const tailKeyDesc = argKeys[0];
+			tailValue = arg[tailKeyDesc];
+			if (argKeys[0] === '_') {
 				// _ is a specific key to add additional context for server
+				if (!Array.isArray(tail)) {
+					tail._ = tailValue;
+				}
+			} else {
+				// avoid recursion with collectArgs
+				return argDumper ({...style, collectArgs: false}, tailValue, index, fills, tail, tailKeyDesc);
 			}
 		} else {
 			if (Array.isArray(tail)) {
 				tail.push(tailValue);
 			} else {
-				tail[argConstructorName + '#' + index] = tailValue;
+				tail[tailKey || argConstructorName + '#' + index] = tailValue;
 			}
 
 			const formatArgs = [
@@ -112,8 +127,11 @@ function argDumper (style, arg, index, fills, tail) {
 		}
 
 	} else if (arg.constructor === String) { // typeof(arg) === 'string' || arg instanceof String
+		if (tailKey && !Array.isArray(tail)) {
+			tail[tailKey] = arg;
+		}
 		if (style.maxStringLength && arg.length > style.maxStringLength) {
-			Array.isArray(tail) ? tail.push (arg) : tail['String#' + index] = arg;
+			Array.isArray(tail) ? tail.push (arg) : tail[tailKey || 'String#' + index] = arg;
 			return ['', arg.slice(0, style.maxStringLength) + '...', ''].join ('"');
 		}
 		return '"' + arg + '"'; // <string>
@@ -181,23 +199,45 @@ export function formatter ({style, wantsObject}, strings, ...args) {
 		: [chunks.join (''), ...fills, ...tail];
 }
 
+/**
+ * @type {'browser'|'node'} Current runtime
+ */
+export const runtime = globalThis.window ? 'browser' : 'node';
+
+/**
+ * @typedef  {Object} ClassCustomConfig
+ * @property {Object} [classRef] class reference to match inherited classes, such as Error or Element
+ * @property {Object} style styling for class
+ * @property {Function} [facade] provides logging facade for class
+ */
+
+/**
+ * @typedef {Object} ClassFormats
+ * @property {Map<RegExp,ClassCustomConfig>} all all class formats
+ * @property {Function} installPredefined install predefined formats for Error and Element
+ */
+
+/** @type {ClassFormats} */
+export const classFormats = {
+	all: new Map(),
+	installPredefined() {
+		classFormats.all.set(/Error$/, {
+			classRef: Error, // just to ensure class match by class constructor, not name
+			style: {browser: 'background-color: #f63;', node: '\x1b[31m'}
+		});
+
+		if (runtime === 'browser') {
+			classFormats.all.set(/Element$/, {
+				classRef: Element,
+				style: {browser: 'background-color: #4ae;', node: '\x1b[37m'}
+			});
+		}
+		
+	}
+};
+
+
 const roundedStyle = 'border-radius: 2px;';
-
-export const customizations = {
-	// @ts-ignore
-	[/Error$/]: {
-		classRef: Error, // just to ensure class match by class constructor, not name
-		style: {browser: 'background-color: #f63;', node: '\x1b[31m'}
-	},
-	// @ts-ignore
-	[/Element$/]: {
-		classRef: Error, // just to ensure class match by class constructor, not name
-		style: {browser: 'background-color: #4ae;', node: '\x1b[37m'}
-	},
-};
-
-export const classes = {
-};
 
 /**
  * @type {Object<String,FormatStyles>}
@@ -243,11 +283,6 @@ export const styles = {
 		collectArgs: true,
 	},
 };
-
-/**
- * @type {'browser'|'node'} Current runtime
- */
-export const runtime = globalThis.window ? 'browser' : 'node';
 
 /**
  * Default formatter for current runtime
