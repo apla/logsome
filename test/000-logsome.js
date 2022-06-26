@@ -1,7 +1,9 @@
 import {endpoint, format, styles, formatter, runtime, classFormats} from '../logsome.js';
 
+/** @typedef {import('../logsome.js').FormatStyle} FormatStyle */
+
 const formatToObject = formatter.bind (null, {
-    /** @type {import('../logsome.js').FormatStyles} */
+    /** @type {FormatStyle} */
     style: {
         ...styles[runtime],
         collectArgs: true
@@ -9,7 +11,7 @@ const formatToObject = formatter.bind (null, {
 });
 
 const formatFn = formatter.bind (null, {
-    /** @type {import('../logsome.js').FormatStyles} */
+    /** @type {FormatStyle} */
     style: {
         ...styles[runtime],
         ignoreFnFormat: true
@@ -17,7 +19,7 @@ const formatFn = formatter.bind (null, {
 });
 
 const formatServer = formatter.bind (null, {
-    /** @type {import('../logsome.js').FormatStyles} */
+    /** @type {FormatStyle} */
     style: {
         ...styles.server,
         ignoreFnFormat: true
@@ -43,7 +45,7 @@ describe ("logsome", () => {
     it ("supports direct call => array", () => {
         const c = new Capsule;
 
-        const args = format(c);
+        const args = format`${c}`;
 
         assert.strictEqual(args.length, 5);
 
@@ -56,7 +58,7 @@ describe ("logsome", () => {
         // class name + arg number
         assert.strictEqual(args[4], c);
 
-        if (debug) console.log (...format(c));
+        if (debug) console.log (...format`${c}`);
     });
 
     it ("but it's better to have tagged template string => array", () => {

@@ -1,24 +1,32 @@
 /**
- * @typedef {Object} FormatStyles
+ * @typedef {Object} FormatStyle
  * styles
- * @property {String} common common style for every type
- * @property {String} object style for objects
- * @property {String} array  style for arrays
- * @property {String} fn     style for functions
- * @property {String} clear  style clear
- * @property {Number} maxArrayLength max array element count to inline
- * @property {Number} maxStringLength max string length to inline
+ * @property {String}  common common style for every type
+ * @property {String}  object style for objects
+ * @property {String}  array  style for arrays
+ * @property {String}  fn     style for functions
+ * @property {String}  clear  style clear
+ * @property {Number}  maxArrayLength max array element count to inline
+ * @property {Number}  maxStringLength max string length to inline
  * @property {Boolean} stringify stringify objects using toJSON method
- * @property {String} objectSeparator separator between log string and objects dump
+ * @property {String}  objectSeparator separator between log string and objects dump
  * @property {Boolean} supportsPercent log environment supports percent notation such as %s %o
- * @property {String} styledTemplate style template
+ * @property {String}  styledTemplate style template
  * @property {Boolean} collectArgs collect args into single structure
  * @property {Boolean} [ignoreFnFormat=false] ignore function formatting, don't show any complaint about it
  */
 
 /**
- * Stringify single argument
- * @param {FormatStyles} style formatting styles
+ * Prepare single argument for console
+ * @description
+ * This function can return the value, in that case value
+ * will be inserted into log message. Or, `argDumper` can return
+ * percent format and push value to the fills. In that case,
+ * `arg` will be formatted according to the format specifier.
+ * Additionally, you can add some value to the `tail`.
+ * For console, tail will be displayed after the log message,
+ * for server data it will be the part of the payload.
+ * @param {FormatStyle} style formatting styles
  * @param {*} arg template string arg
  * @param {Number} index arg index
  * @param {any[]} fills array of fills
@@ -150,9 +158,9 @@ function argDumper (style, arg, index, fills, tail, tailKey) {
 /**
  * Format template string args
  * @param {Object} binding binding object
- * @param {FormatStyles} binding.style binding object
+ * @param {FormatStyle} binding.style binding object
  * @param {Boolean} [binding.wantsObject] return object instead of array
- * @param {String[]} strings string chunks between interpolations
+ * @param {Readonly<String[]>} strings string chunks between interpolations
  * @param  {...any} args interpolations
  * @returns {Array|Object}
  */
@@ -240,7 +248,7 @@ export const classFormats = {
 const roundedStyle = 'border-radius: 2px;';
 
 /**
- * @type {Object<String,FormatStyles>}
+ * @type {Object<String,FormatStyle>}
  */
 export const styles = {
 	// browser environment
@@ -286,9 +294,11 @@ export const styles = {
 
 /**
  * Default formatter for current runtime
+ * @type {(strings: Readonly<String[]>, ...args: any[]) => any[] | any}
  */
 export const format = formatter.bind (null, {style: styles[runtime]});
 
+/** @type {Object<String,(url: String) => LogsomeServer>} */
 export const locators = {
 	
 	/**
@@ -334,8 +344,11 @@ export const locators = {
 
 
 /**
- * Send log messages
+ * Send log messages from browser
+ * @param {String} serverName server name
  * @param {Object} message text version of message to send
+ * @param {Object | Array} fills 
+ * @param {Object} data data payload to send
  * @returns {Promise}
  */
 function sendingFromBrowser (serverName, message, fills, data) {
@@ -343,7 +356,7 @@ function sendingFromBrowser (serverName, message, fills, data) {
 	const serverConfig = servers[serverName];
 
 	const url = serverConfig.url;
-	const serverOptions = serverConfig.options;
+	const serverOptions = serverConfig.options || {};
 	const useBeacon = serverOptions.useBeacon;
 
 	// TODO: use formatter
@@ -390,7 +403,7 @@ function sendingFromNode (serverName, message, fills, data) {
 	// TODO: serialize using formatter
 	const dataToSend = JSON.stringify({message, data});
 
-	/** @type {import ('https').RequestOptions} */
+	/** @type {RequestOptions} */
 	// const requestOptions = {};
 	const requestOptions = {
 		method:  serverOptions.method || 'POST',
@@ -432,7 +445,6 @@ function sendingFromNode (serverName, message, fills, data) {
 
 }
 
-/** @typedef {import ('https').RequestOptions} RequestOptions */
 /**
  * @typedef LogsomeServerOptions
  * @property {Boolean} [useBeacon=false] use navigator.sendBeacon interface
@@ -453,7 +465,7 @@ const servers = {};
 /**
  * 
  * @param {String} serverNameOrUrl server name or url of endpoint
- * @returns {Function}
+ * @returns {(...args: any[]) => any[]}
  */
 function sender (serverNameOrUrl) {
 
