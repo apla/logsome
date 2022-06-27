@@ -233,7 +233,7 @@ describe ("logsome", () => {
             constructor(id) {
                 this.id = id;
             }
-            [Symbol.for('logsome')]() {
+            get [Symbol.for('logsome')]() {
                 return {
                     title: this.constructor.name + '@id=' + this.id, writable: false,
                     // style: {node: '', browser: ''}
@@ -264,7 +264,7 @@ describe ("logsome", () => {
                 // please don't do this, use `#password`
                 this.password = password;
             }
-            [Symbol.for('logsome')]() {
+            get [Symbol.for('logsome')]() {
                 return {
                     facade: () => {
                         

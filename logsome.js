@@ -95,7 +95,10 @@ function argDumper (style, arg, index, fills, tail, tailKey) {
 		if (customClassPattern && customClassFormat && arg instanceof customClassFormat.classRef) {
 			customFormat = customClassFormat;
 		} else if (arg[Symbol.for('logsome')]) {
-			customFormat = arg[Symbol.for('logsome')]();
+			customFormat = arg[Symbol.for('logsome')];
+			if (typeof customFormat === 'function') {
+				customFormat = customFormat();
+			}
 		}
 
 		const argKeys = Object.keys(arg);
