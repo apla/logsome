@@ -108,10 +108,10 @@ endpoint(`loggly:${logglyToken}`, {name: 'loggly'});
 const sendR3 = endpoint('loggly');
 
 // Customization for external classes can be specified
-// within `classes` export. Some predefined customizations available
-// within `customizations` export. Please note performance degradation.
-import {classes, customizations} from 'logsome';
-classes[/Error$/] = customizations[/Error$/];
+// within `classFormats` export. `Error` and `Element` customizations available
+// by calling `classFormats.installPredefined()`. Please note performance degradation.
+import {classFormats} from 'logsome';
+classFormats.installPredefined();
 
 ```
 
@@ -207,10 +207,22 @@ due differences between node and browsers. First of all, browsers won't display
 when object stringified. Node.js displays `Symbol.toStringTag` in square brackets
 after class name.
 
-### custom presentation, external
+### custom class instances presentation, external
 
-When you want to present some external classes, import `classes` from logsome.
-Take a look an example from `customizations` export.
+When you want to present some external classes, import `classFormats` from logsome.
+
+```javascript
+import {classFormats} from 'logsome';
+
+classFormats.set(/Error$/, {
+    classRef: Error, // just to ensure class match by class constructor, not name
+	style: {browser: 'background-color: #f63;', node: '\x1b[31m'}
+});
+
+// or install predefined formats for Error, Element (Element is available only in the browser)
+
+classFormats.installPredefined();
+```
 
 ## Notes
 

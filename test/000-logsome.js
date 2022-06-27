@@ -28,10 +28,6 @@ const formatServer = formatter.bind (null, {
     }
 });
 
-
-// Error presentation
-classFormats.installPredefined();
-
 import assert from 'assert';
 
 class Capsule {
@@ -300,11 +296,44 @@ describe ("logsome", () => {
         if (debug) console.log(...args);
     });
 
-    it ("special class handling: Error", () => {
+    const errorStyle = {browser: 'background-color: #f63;', node: '\x1b[31m'};
 
-        const err = new TypeError('Not an error');
+    it ("installing special handler for Error class", () => {
+        // Error presentation
+        assert.doesNotThrow(() => {
+            classFormats.set(/Error$/, {
+                classRef: Error, // just to ensure class match by class constructor, not name
+                style: errorStyle
+            });
+        });
+
+        const err = new Error('testing error');
 
         const args = formatToObject`Error: ${err}`;
+
+        classFormats.clear();
+
+        assert.strictEqual(args[1], errorStyle[runtime]);
+        assert.strictEqual(args[2], err.constructor.name);
+
+    });
+
+    it ("special class handling: Error", () => {
+
+        let err, args;
+
+        err = new TypeError('testing type error');
+
+        args = formatToObject`Error: ${err}`;
+
+        assert.strictEqual(args[1], styles[runtime].object);
+        assert.strictEqual(args[2], err.constructor.name);
+
+        classFormats.installPredefined();
+
+        err = new TypeError('testing type error');
+
+        args = formatToObject`Error: ${err}`;
 
         assert.notStrictEqual(args[1], styles[runtime].object);
         assert.strictEqual(args[2], err.constructor.name);

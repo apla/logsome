@@ -223,6 +223,8 @@ export const runtime = globalThis.window ? 'browser' : 'node';
  * @typedef {Object} ClassFormats
  * @property {Map<RegExp,ClassCustomConfig>} all all class formats
  * @property {Function} installPredefined install predefined formats for Error and Element
+ * @property {(match: RegExp, config: ClassCustomConfig) => void} set sets the new class handler
+ * @property {Function} clear clear all class formats
  */
 
 /** @type {ClassFormats} */
@@ -239,8 +241,13 @@ export const classFormats = {
 				classRef: Element,
 				style: {browser: 'background-color: #4ae;', node: '\x1b[37m'}
 			});
-		}
-		
+		}	
+	},
+	set (match, config) {
+		classFormats.all.set(match, config);
+	},
+	clear () {
+		classFormats.all.clear();
 	}
 };
 
