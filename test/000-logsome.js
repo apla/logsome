@@ -258,17 +258,18 @@ describe ("logsome", () => {
 
         let args = [];
 
-        class Runner {
-            constructor(arg1, arg2) {
-                this.arg1 = arg1;
-                this.arg2 = arg2;
+        class User {
+            constructor(username, password) {
+                this.username = username;
+                // please don't do this, use `#password`
+                this.password = password;
             }
             [Symbol.for('logsome')]() {
                 return {
                     facade: () => {
                         
                         // copy everything except arg2
-                        const {arg2, ...props} = this;
+                        const {password, ...props} = this;
                         // make sure class name and prototype is copied as well
                         let clone = Object.assign(Object.create(Object.getPrototypeOf(this)), props);
 
@@ -281,7 +282,7 @@ describe ("logsome", () => {
             }
         }
 
-        const r = new Runner('a', 42);
+        const r = new User('John', 'S1cr3t');
 
         r.test();
 
@@ -291,7 +292,8 @@ describe ("logsome", () => {
 
         assert.strictEqual(Object.keys(tail)[0], r.constructor.name + '#0');
         assert.strictEqual(Object.keys(facadeObj).length, 1);
-        assert.strictEqual(facadeObj.arg1, 'a');
+        assert.strictEqual(facadeObj.username, 'John');
+        assert(!('password' in facadeObj));
 
         if (debug) console.log(...args);
     });
