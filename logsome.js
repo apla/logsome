@@ -97,7 +97,7 @@ function argDumper (style, arg, index, fills, tail, tailKey) {
 		} else if (arg[Symbol.for('logsome')]) {
 			customFormat = arg[Symbol.for('logsome')];
 			if (typeof customFormat === 'function') {
-				customFormat = customFormat();
+				customFormat = customFormat.call(arg);
 			}
 		}
 
@@ -463,7 +463,7 @@ async function sendingFromNode (serverName, message, fills, data) {
 /**
  * @typedef LogsomeServer
  * @property {string} url server's url
- * @property {any} [data] data to send with each log message
+ * @property {Object<String,any>|Function} [data] 
  * @property {LogsomeServerOptions & RequestOptions} [options] server options
  */
 /**
@@ -553,14 +553,9 @@ export function endpoint (url, {name, data, options} = {}) {
 }
 
 /**
- * Format message for log and send it via default endpoint.
- * Default endpoint have `.name` = '' or if there is no other enpoints configured.
- * Throws error with `.code` = `NO_DEFAULT_ENDPOINT`
- * @param {String[]|TemplateStringsArray} strings template strings
- * @param  {...any} args template args
- * @returns {any[]}
+ * @returns {(...args: any[]) => any[]}
  */
-export function report (strings, ...args) {
+export function getDefaultSender () {
 	const serverKeys = Object.keys(servers);
 	let senderFn;
 	if (serverKeys.length === 1) {
@@ -573,6 +568,19 @@ export function report (strings, ...args) {
 		err.code = 'NO_DEFAULT_ENDPOINT'
 		throw err;
 	}
+	return senderFn;
+}
+
+/**
+ * Format message for log and send it via default endpoint.
+ * Default endpoint have `.name` = '' or if there is no other enpoints configured.
+ * Throws error with `.code` = `NO_DEFAULT_ENDPOINT`
+ * @param {String[]|TemplateStringsArray} strings template strings
+ * @param  {...any} args template args
+ * @returns {any[]}
+ */
+export function report (strings, ...args) {
+	const senderFn = getDefaultSender();
 	return senderFn(strings, ...args);
 }
 

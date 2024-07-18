@@ -1,5 +1,6 @@
-import logsome, {endpoint, format, locators, report} from '../logsome.js';
+import logsome, {endpoint, format, locators, report, getDefaultSender} from '../logsome.js';
 
+import { describe, it } from "node:test";
 import assert from 'assert';
 
 const logglyToken = process.env.LOGGLY;
@@ -26,7 +27,6 @@ describe ("logsome endpoint", () => {
         assert.strictEqual(senderArgs.length, formatArgs.length);
         assert.strictEqual(senderArgs[0], formatArgs[0]);
 
-        return true;
     });
 
     it ("throws without default endpoint", () => {
@@ -39,6 +39,7 @@ describe ("logsome endpoint", () => {
 
     it ("defaults to single endpoint", () => {
         endpoint('http://localhost/api/v0/log');
+        getDefaultSender();
         report`${null}`;
     });
 
@@ -58,7 +59,6 @@ describe ("logsome endpoint", () => {
         logsome.endpoint('http://localhost/api/v1/log', {name: 'local'});
         const sendr = logsome.endpoint('local');
         sendr`${"ok"}`;
-        return true;
     });
 
     it ("supports named void: protocol", () => {
@@ -80,7 +80,6 @@ describe ("logsome endpoint", () => {
         assert.strictEqual(senderArgs.length, formatArgs.length);
         assert.strictEqual(senderArgs[0], formatArgs[0]);
 
-        return true;
     });
 
     it("should throw when no locator for url", () => {

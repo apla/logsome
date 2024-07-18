@@ -1,18 +1,21 @@
 {
   "name": "logsome",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Prepare app objects to be consumable by loggers",
   "main": "logsome.js",
   "type": "module",
   "exports": {
     ".": {
-      "require": "./logsome.cjs",
+      "require": "./pkg/logsome.cjs",
       "import": "./logsome.js"
     }
   },
   "scripts": {
-    "prepare": "npx rollup logsome.js --file logsome.cjs --format cjs && npx rollup logsome.js --exports named --name logsome --file logsome.umd.js --format umd",
-    "test": "jasmine --reporter=node_modules/jamocha/spec.js --config=test/.jasmine.json"
+    "prepare": "mkdir -p pkg && npx rollup logsome.js --file pkg/logsome.cjs --format cjs && npx rollup logsome.js --exports named --name logsome --file pkg/logsome.umd.js --format umd",
+    "test-jasmine": "LOGGLY=dca384c4-dd63-40a5-82c1-14e63f05127a jasmine --reporter=node_modules/jamocha/spec.js --config=test/.jasmine.json",
+    "test": "LOGGLY=dca384c4-dd63-40a5-82c1-14e63f05127a node --test test/*.js",
+    "coverage": "node --test test/*.js --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
+    "check-ts": "tsc --noEmit --allowJs --checkJs --lib es2023,dom src/*.js"
   },
   "repository": {
     "type": "git",
@@ -30,7 +33,6 @@
   },
   "homepage": "https://github.com/apla/logsome#readme",
   "devDependencies": {
-    "jamocha": "^1.0.1",
-    "jasmine": "^4.0.2"
+    "@types/node": "^20.14.10"
   }
 }

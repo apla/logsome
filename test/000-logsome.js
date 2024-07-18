@@ -1,5 +1,7 @@
 import {endpoint, format, styles, formatter, runtime, classFormats} from '../logsome.js';
 
+import { describe, it } from "node:test";
+
 const report = endpoint('void:');
 
 /** @typedef {import('../logsome.js').FormatStyle} FormatStyle */
@@ -38,7 +40,7 @@ const debug = !!process.env.DEBUG;
 
 describe ("logsome", () => {
     it ("is awesome", () => {
-        return true;
+        
     });
     it ("supports direct call => array", () => {
         const c = new Capsule;
@@ -201,6 +203,11 @@ describe ("logsome", () => {
         assert.deepStrictEqual(collectedObject.obj, obj);
         assert.deepStrictEqual(collectedObject.str, str);
 
+
+        const itemIdx = 33;
+        const target = {duration: 15, currentSrc: null};
+        console.log(report`MultiPlayer item#${itemIdx} ${target.duration}s ended ${target.currentSrc}`);
+
         if (debug) console.log(...args);
     });
 
@@ -234,6 +241,35 @@ describe ("logsome", () => {
                 this.id = id;
             }
             get [Symbol.for('logsome')]() {
+                return {
+                    title: this.constructor.name + '@id=' + this.id, writable: false,
+                    // style: {node: '', browser: ''}
+                }
+            }
+            test() {
+                args = formatToObject`${this} test method`;
+            }
+        }
+
+        const r = new Runner(42);
+
+        r.test();
+
+        assert.strictEqual(args[2], r.constructor.name + '@id=' + 42);
+        assert.strictEqual(Object.keys(args[4])[0], r.constructor.name + '#0');
+
+        if (debug) console.log(...args);
+    });
+
+    it ("this is special with id 2", () => {
+
+        let args = [];
+
+        class Runner {
+            constructor(id) {
+                this.id = id;
+            }
+            [Symbol.for('logsome')]() {
                 return {
                     title: this.constructor.name + '@id=' + this.id, writable: false,
                     // style: {node: '', browser: ''}

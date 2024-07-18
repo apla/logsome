@@ -256,9 +256,17 @@ https://github.com/guigrpa/storyboard
 
 ### Optimization
 
+ * Sender should be rewritten; easiest ways to do is open
+ file/https/other stream and send data. Flush stream after every record,
+ close stream on reasonable timeout, use pool of connections.
+
  * use acorn to find out log levels (info, debug, …)
+
  * find out why profiler reports SearchString all the time
 ```
     439   47.7%   50.1%  t unsigned long node::stringsearch::SearchString<unsigned short>(node::stringsearch::Vector<unsigned short const>, node::stringsearch::Vector<unsigned short const>, unsigned long)
     321   34.9%   36.6%  T __kernelrpc_thread_policy_set
 ```
+
+## Articles
+

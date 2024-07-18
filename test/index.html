@@ -9,6 +9,15 @@
             const obj   = {a: 1, b: 2, c: 3};
             console.log (...format`array ${{array}}, string ${{str}}, number ${42}, object ${{obj}}`);
 
+
+            console.log(format`${{
+                type: 23,
+                target: "obj",
+                toString () {
+                    return "Widget"
+                }
+            }} ${0}/${1}`);
+
             // , styles, runtime, formatter
         </script>
     </head>
